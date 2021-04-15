@@ -1,0 +1,6 @@
+- Video resource: https://github.com/KengChiLiu/MOT360
+Simple online and realtime tracking with spherical panoramic camera, Keng-Chi Liu, Yi-Ting Shen, Liang-Gee Chen, International Conference on Consumer Electronics (ICCE) 2018
+
+- Video resolution:         1280x720
+- Tracking object:          human (woman on meeting)
+- Total annotated frames:   449

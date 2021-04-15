@@ -1,0 +1,11 @@
+# pycache folders
+/code/__pycache__
+/code/annotation/__pycache__
+/code/boundingbox/__pycache__
+
+# dataset
+/code/annotation/dataset/*
+
+# uncomment the most important tracking folder later..
+/code/run_tracking.py
+/code/opencv_tracking/*
