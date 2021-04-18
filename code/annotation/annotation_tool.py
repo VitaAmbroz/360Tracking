@@ -38,8 +38,18 @@ class AnnotationTool:
         self.save_images = saveImages               # flag for saving frame as .jpg images
 
         self.GT_PATH = "groundtruth.txt"            # path for possible created groundtruth.txt file
-        self.SEQ_IMAGES_PATH = "img"                # directory for possible frames saving      
+        self.SEQ_IMAGES_PATH = "img"                # directory for possible frames saving
 
+        # constants for sizes and positions of opencv circles, rectangles and texts
+        self.CIRCLE_RADIUS_PX = 5
+        self.RECTANGLE_BORDER_PX = 2
+        self.FONT_SCALE = 0.6
+        self.FONT_WEIGHT = 1
+        self.TEXT_ROW1_POS = (20,25)
+        self.TEXT_ROW2_POS = (20,50)
+        self.TEXT_ROW3_POS = (20,75)
+
+        self.WINDOW_NAME = "AnnotationTool"
 
     # method for parsing ground truth data from given filepath
     def _parseGivenGroundtruth(self, path: str):
@@ -60,7 +70,7 @@ class AnnotationTool:
                 y1 = int(line_arr[2])
                 # point 2 could be normalized because of border problem
                 x2 = int(line_arr[1]) + int(line_arr[3])
-                y2 = int(int(line_arr[2]) + int(line_arr[4]))
+                y2 = int(line_arr[2]) + int(line_arr[4])
                 if x2 > self.video_width:
                     x2 = x2 - self.video_width
 
@@ -154,7 +164,7 @@ class AnnotationTool:
             if self.current_frame > 1:
                 prev = self.bounding_boxes[self.current_frame - 2]
                 if prev and prev.is_annotated:
-                    self._drawBoundingBox(prev.point1, prev.point2, prev, (255, 0, 0), 2)
+                    self._drawBoundingBox(prev.point1, prev.point2, prev, (255, 0, 0), self.RECTANGLE_BORDER_PX)
 
 
     # method for duplicating previous annotation
@@ -190,13 +200,13 @@ class AnnotationTool:
             elif self.pt1:
                 annotation = str(self.pt1[0]) + "," + str(self.pt1[1]) + ",nan,nan"
 
-            cv2.putText(self.frame, "Frame #" + str(self.current_frame) + " : " + annotation, (20,25), cv2.FONT_HERSHEY_SIMPLEX, 0.6, (250, 250, 0), 1)
+            cv2.putText(self.frame, "Frame #" + str(self.current_frame) + " : " + annotation, self.TEXT_ROW1_POS, cv2.FONT_HERSHEY_SIMPLEX, self.FONT_SCALE, (250, 250, 0), self.FONT_WEIGHT)
 
             # show control help
             info = "'Enter' = next frame, 'Backspace' = previous frame, 'Q' = quit, 'H' = hide this text"
-            cv2.putText(self.frame, info, (20,50), cv2.FONT_HERSHEY_SIMPLEX, 0.6, (0, 150, 250), 1,)
+            cv2.putText(self.frame, info, self.TEXT_ROW2_POS, cv2.FONT_HERSHEY_SIMPLEX, self.FONT_SCALE, (0, 150, 250), self.FONT_WEIGHT)
             info2 = "'R' = reset annotation, 'P' = previous annotation, 'D' = duplicate previous annotation"
-            cv2.putText(self.frame, info2, (20,75), cv2.FONT_HERSHEY_SIMPLEX, 0.6, (0, 150, 250), 1)
+            cv2.putText(self.frame, info2, self.TEXT_ROW3_POS, cv2.FONT_HERSHEY_SIMPLEX, self.FONT_SCALE, (0, 150, 250), self.FONT_WEIGHT)
 
 
     # mouse event handler
@@ -205,14 +215,16 @@ class AnnotationTool:
         # check to see if the left mouse button was released
         if event == cv2.EVENT_LBUTTONUP:
             self.frame = self.clone.copy()
+            # render also previous bounding box if enabled
+            self._showPreviousBoundingBox()
 
             # record the ending (x, y) coordinates
             if not(self.pt1):
                 self.pt1 = (x, y)
-                cv2.circle(self.frame, self.pt1, radius=5, color=(0, 255, 0), thickness=-1)
+                cv2.circle(self.frame, self.pt1, radius=self.CIRCLE_RADIUS_PX, color=(0, 255, 0), thickness=-1)
             elif not(self.pt2):
                 self.pt2 = (x, y)
-                cv2.circle(self.frame, self.pt2, radius=5, color=(0, 255, 0), thickness=-1)
+                cv2.circle(self.frame, self.pt2, radius=self.CIRCLE_RADIUS_PX, color=(0, 255, 0), thickness=-1)
             
             if self.pt1 and self.pt2:
                 # new instance of bounding box
@@ -221,15 +233,14 @@ class AnnotationTool:
                 self.bounding_box.frame_copy = self.frame.copy()
 
                 # circles as points
-                cv2.circle(self.frame, self.pt1, radius=5, color=(0, 255, 0), thickness=-1)
-                cv2.circle(self.frame, self.pt2, radius=5, color=(0, 255, 0), thickness=-1)
+                cv2.circle(self.frame, self.pt1, radius=self.CIRCLE_RADIUS_PX, color=(0, 255, 0), thickness=-1)
+                cv2.circle(self.frame, self.pt2, radius=self.CIRCLE_RADIUS_PX, color=(0, 255, 0), thickness=-1)
                 # rectangle(s) as bounding box
-                self._drawBoundingBox(self.pt1, self.pt2, self.bounding_box, (0, 255, 0), 2)
+                self._drawBoundingBox(self.pt1, self.pt2, self.bounding_box, (0, 255, 0), self.RECTANGLE_BORDER_PX)
             
             # showing frame
-            self._showPreviousBoundingBox()
             self._textToFrame()
-            cv2.imshow("video", self.frame)
+            cv2.imshow(self.WINDOW_NAME, self.frame)
 
 
     #######################################################################
@@ -260,27 +271,36 @@ class AnnotationTool:
         if self.groundtruth_path:
             self._parseGivenGroundtruth(self.groundtruth_path)
 
-        # setup the mouse callback function
-        if self.video_width < 1400:
-            cv2.namedWindow("video")
+        # resize window (lets define max width is 1600px)
+        # TODO optimalization circles, rectangles and text scaling when resizeWindow
+        if self.video_width < 1600:
+            cv2.namedWindow(self.WINDOW_NAME)
         else:
-            cv2.namedWindow("video", cv2.WINDOW_NORMAL | cv2.WINDOW_KEEPRATIO)
+            cv2.namedWindow(self.WINDOW_NAME, cv2.WINDOW_NORMAL | cv2.WINDOW_KEEPRATIO)
             whRatio = self.video_width / self.video_height
             if whRatio == 2:
                 # pure equirectangular 2:1
-                cv2.resizeWindow("video", 1600, 800)
+                cv2.resizeWindow(self.WINDOW_NAME, 1600, 800)
             else:
                 # default 16:9
-                cv2.resizeWindow("video", 1600, 900)
+                cv2.resizeWindow(self.WINDOW_NAME, 1600, 900)
 
-        # TODO correct circles, rectangles and text scaling when resizeWindow
+            scaleFactor = self.video_width / 1600
+            self.CIRCLE_RADIUS_PX = int(self.CIRCLE_RADIUS_PX * scaleFactor)
+            self.RECTANGLE_BORDER_PX = int(self.RECTANGLE_BORDER_PX * scaleFactor)
+            self.FONT_SCALE = self.FONT_SCALE * scaleFactor
+            self.FONT_WEIGHT = int(self.FONT_WEIGHT * scaleFactor) + 1
+            self.TEXT_ROW1_POS = (int(self.TEXT_ROW1_POS[0] * scaleFactor), int(self.TEXT_ROW1_POS[1] * scaleFactor))
+            self.TEXT_ROW2_POS = (int(self.TEXT_ROW2_POS[0] * scaleFactor), int(self.TEXT_ROW2_POS[1] * scaleFactor))
+            self.TEXT_ROW3_POS = (int(self.TEXT_ROW3_POS[0] * scaleFactor), int(self.TEXT_ROW3_POS[1] * scaleFactor))
 
-        cv2.setMouseCallback("video", self._click_bounding_box)
+        # setup the mouse callback function
+        cv2.setMouseCallback(self.WINDOW_NAME, self._click_bounding_box)
         
         # display first frame
         if not(self.groundtruth_path):
             self._textToFrame()
-        cv2.imshow("video", self.frame)
+        cv2.imshow(self.WINDOW_NAME, self.frame)
 
         # prints guide of this annotation tool
         print("----------------------------------------------------")
@@ -323,13 +343,13 @@ class AnnotationTool:
                 self.pt1 = self.bounding_box.point1
                 self.pt2 = self.bounding_box.point2
                 # circles as points
-                cv2.circle(self.frame, self.pt1, radius=5, color=(0, 255, 0), thickness=-1)
-                cv2.circle(self.frame, self.pt2, radius=5, color=(0, 255, 0), thickness=-1)
+                cv2.circle(self.frame, self.pt1, radius=self.CIRCLE_RADIUS_PX, color=(0, 255, 0), thickness=-1)
+                cv2.circle(self.frame, self.pt2, radius=self.CIRCLE_RADIUS_PX, color=(0, 255, 0), thickness=-1)
                 # rectangle(s) as bounding box
-                self._drawBoundingBox(self.pt1, self.pt2, self.bounding_box, (0, 255, 0), 2)
+                self._drawBoundingBox(self.pt1, self.pt2, self.bounding_box, (0, 255, 0), self.RECTANGLE_BORDER_PX)
                 # showing frame with rectangles
                 self._textToFrame()
-                cv2.imshow("video", self.frame)
+                cv2.imshow(self.WINDOW_NAME, self.frame)
 
         # print debug info
         print("Showing frame #" + str(self.current_frame) + "...")
@@ -370,7 +390,7 @@ class AnnotationTool:
                     # show frame (optional showing previous bounding_box)
                     self._showPreviousBoundingBox()
                     self._textToFrame()
-                    cv2.imshow("video", self.frame)
+                    cv2.imshow(self.WINDOW_NAME, self.frame)
                 # user navigates between first frame and last read frame
                 elif self.current_frame < len(self.bounding_boxes):
                     # increment current_frame counter
@@ -401,20 +421,22 @@ class AnnotationTool:
                             self.frame = self.bounding_box.frame_copy.copy()
                             self.clone = self.frame.copy()
                             
+                        # optional showing previous bounding_box
+                        self._showPreviousBoundingBox()
+
                         # show annotations
                         if self.bounding_box.is_annotated:
                             self.pt1 = self.bounding_box.point1
                             self.pt2 = self.bounding_box.point2
                             # circles as points
-                            cv2.circle(self.frame, self.pt1, radius=5, color=(0, 255, 0), thickness=-1)
-                            cv2.circle(self.frame, self.pt2, radius=5, color=(0, 255, 0), thickness=-1)
+                            cv2.circle(self.frame, self.pt1, radius=self.CIRCLE_RADIUS_PX, color=(0, 255, 0), thickness=-1)
+                            cv2.circle(self.frame, self.pt2, radius=self.CIRCLE_RADIUS_PX, color=(0, 255, 0), thickness=-1)
                             # rectangle(s) as bounding box
-                            self._drawBoundingBox(self.pt1, self.pt2, self.bounding_box, (0, 255, 0), 2)
+                            self._drawBoundingBox(self.pt1, self.pt2, self.bounding_box, (0, 255, 0), self.RECTANGLE_BORDER_PX)
                         
-                        # show frame (optional showing previous bounding_box)
-                        self._showPreviousBoundingBox()
+                        # show frame 
                         self._textToFrame()
-                        cv2.imshow("video", self.frame)
+                        cv2.imshow(self.WINDOW_NAME, self.frame)
                     else:
                         print("Unexpected error when showing next frame - annotation process failed")
                         break
@@ -446,20 +468,23 @@ class AnnotationTool:
                         # use saved copy of frame
                         self.frame = self.bounding_box.frame_copy.copy()
                         self.clone = self.frame.copy()
+
+                        # optional showing previous bounding_box
+                        self._showPreviousBoundingBox()
+
                         # show annotations
                         if self.bounding_box.is_annotated:
                             self.pt1 = self.bounding_box.point1
                             self.pt2 = self.bounding_box.point2
                             # circles as points
-                            cv2.circle(self.frame, self.pt1, radius=5, color=(0, 255, 0), thickness=-1)
-                            cv2.circle(self.frame, self.pt2, radius=5, color=(0, 255, 0), thickness=-1)
+                            cv2.circle(self.frame, self.pt1, radius=self.CIRCLE_RADIUS_PX, color=(0, 255, 0), thickness=-1)
+                            cv2.circle(self.frame, self.pt2, radius=self.CIRCLE_RADIUS_PX, color=(0, 255, 0), thickness=-1)
                             # rectangle(s) as bounding box
-                            self._drawBoundingBox(self.pt1, self.pt2, self.bounding_box, (0, 255, 0), 2)
+                            self._drawBoundingBox(self.pt1, self.pt2, self.bounding_box, (0, 255, 0), self.RECTANGLE_BORDER_PX)
                         
-                        # show frame (optional showing previous bounding_box)
-                        self._showPreviousBoundingBox()
+                        # show frame 
                         self._textToFrame()
-                        cv2.imshow("video", self.frame)
+                        cv2.imshow(self.WINDOW_NAME, self.frame)
                         # print debug info
                         print("--------------------------")
                         print("Showing frame #" + str(self.current_frame) + "...")
@@ -481,7 +506,7 @@ class AnnotationTool:
                 # show frame
                 self._showPreviousBoundingBox()
                 self._textToFrame()
-                cv2.imshow("video", self.frame)
+                cv2.imshow(self.WINDOW_NAME, self.frame)
 
             # 'P' as Previous
             elif key == ord("p"):
@@ -497,14 +522,14 @@ class AnnotationTool:
                 self._showPreviousBoundingBox()  
                 if self.pt1 and self.pt2:
                     # circles as points
-                    cv2.circle(self.frame, self.pt1, radius=5, color=(0, 255, 0), thickness=-1)
-                    cv2.circle(self.frame, self.pt2, radius=5, color=(0, 255, 0), thickness=-1)
+                    cv2.circle(self.frame, self.pt1, radius=self.CIRCLE_RADIUS_PX, color=(0, 255, 0), thickness=-1)
+                    cv2.circle(self.frame, self.pt2, radius=self.CIRCLE_RADIUS_PX, color=(0, 255, 0), thickness=-1)
                     # rectangle(s) as bounding box
-                    self._drawBoundingBox(self.pt1, self.pt2, self.bounding_box, (0, 255, 0), 2)
+                    self._drawBoundingBox(self.pt1, self.pt2, self.bounding_box, (0, 255, 0), self.RECTANGLE_BORDER_PX)
 
                 # show frame          
                 self._textToFrame()
-                cv2.imshow("video", self.frame)
+                cv2.imshow(self.WINDOW_NAME, self.frame)
 
             # 'D' as Duplicate
             elif key == ord("d"):
@@ -516,14 +541,14 @@ class AnnotationTool:
 
                 if self.pt1 and self.pt2:
                     # circles as points
-                    cv2.circle(self.frame, self.pt1, radius=5, color=(0, 255, 0), thickness=-1)
-                    cv2.circle(self.frame, self.pt2, radius=5, color=(0, 255, 0), thickness=-1)
+                    cv2.circle(self.frame, self.pt1, radius=self.CIRCLE_RADIUS_PX, color=(0, 255, 0), thickness=-1)
+                    cv2.circle(self.frame, self.pt2, radius=self.CIRCLE_RADIUS_PX, color=(0, 255, 0), thickness=-1)
                     # rectangle(s) as bounding box
-                    self._drawBoundingBox(self.pt1, self.pt2, self.bounding_box, (0, 255, 0), 2)
+                    self._drawBoundingBox(self.pt1, self.pt2, self.bounding_box, (0, 255, 0), self.RECTANGLE_BORDER_PX)
 
                 # show frame
                 self._textToFrame()
-                cv2.imshow("video", self.frame)
+                cv2.imshow(self.WINDOW_NAME, self.frame)
             
             # 'H' as Hide Help text
             elif key == ord("h"):
@@ -538,7 +563,7 @@ class AnnotationTool:
                 # show frame
                 self._showPreviousBoundingBox()
                 self._textToFrame()
-                cv2.imshow("video", self.frame)
+                cv2.imshow(self.WINDOW_NAME, self.frame)
 
             # 'Q' as Quit
             elif key == 27 or key == ord("q"):

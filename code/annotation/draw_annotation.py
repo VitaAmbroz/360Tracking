@@ -17,15 +17,21 @@ import os
 from boundingbox.boundingbox import BoundingBox
 
 
-# TODO resizeWindow + correct circles, rectangles and text scaling when resizeWindow
-
 class DrawAnnotation:
     def __init__(self, directoryPath: str):
         # list of annotated bounding box objects
         self.bounding_boxes = []
-        
+        # path fo directory in custom dataset
         self.directory_path = directoryPath
 
+        # constants for sizes and positions of opencv rectangles and texts
+        self.RECTANGLE_BORDER_PX = 3
+        self.FONT_SCALE = 0.75
+        self.FONT_WEIGHT = 2
+        self.TEXT_ROW1_POS = (20,30)
+        self.TEXT_ROW2_POS = (20,60)
+
+        self.WINDOW_NAME = "DrawAnnotation"
 
     # method for parsing ground truth data from given filepath
     def _parseGivenGroundtruth(self, path, videoWidth):
@@ -46,7 +52,7 @@ class DrawAnnotation:
                 y1 = int(line_arr[2])
                 # point 2 could be normalized because of border problem
                 x2 = int(line_arr[1]) + int(line_arr[3])
-                y2 = int(int(line_arr[2]) + int(line_arr[4]))
+                y2 = int(line_arr[2]) + int(line_arr[4])
                 if x2 > videoWidth:
                     x2 = x2 - videoWidth
 
@@ -80,6 +86,7 @@ class DrawAnnotation:
             self.directory_path += "/"
         VIDEO_PATH = self.directory_path + '*.mp4'
         GT_PATH = self.directory_path + 'groundtruth.txt'
+        # VIDEO_RENDERED_PATH = self.directory_path + "annotated.avi"
 
         filenames = glob.glob(VIDEO_PATH)
         if len(filenames) < 1:
@@ -93,47 +100,40 @@ class DrawAnnotation:
             print("Could not open video")
             sys.exit(-1)
 
-        # Read first frame.
-        ok, frame = video.read()
-        if not ok:
-            print("Error - Could not read a video file")
-            sys.exit(-1)
-
-        # save video width/height to variables
+        # store video width/height to variables
         videoWidth = int(video.get(cv2.CAP_PROP_FRAME_WIDTH))
-        # video_height = int(video.get(cv2.CAP_PROP_FRAME_HEIGHT))
+        videoHeight = int(video.get(cv2.CAP_PROP_FRAME_HEIGHT))
+
+        # Save video with bounding box feature - define the codec and create VideoWriter object
+        fps = video.get(cv2.CAP_PROP_FPS)
+        # fourcc = cv2.VideoWriter_fourcc(*'XVID')
+        # output_video = cv2.VideoWriter(VIDEO_RENDERED_PATH, fourcc, fps, (videoWidth, videoHeight))
+        # output_video = cv2.VideoWriter(VIDEO_RENDERED_PATH, fourcc, fps, (1440, 720))
+        # output_video = cv2.VideoWriter(VIDEO_RENDERED_PATH, fourcc, fps, (1280, 720))
+        # output_video = cv2.VideoWriter(VIDEO_RENDERED_PATH, fourcc, fps, (2880, 1440))
         
         # parse given groundtruth file
         self._parseGivenGroundtruth(GT_PATH, videoWidth)
 
-        # counter of frames
-        currentFrame = 1
-
-        # setup the mouse callback function
-        cv2.namedWindow("VideoAnnotation")
-
-        # handle first frame
-        bb = self.bounding_boxes[currentFrame - 1]
-        # show annotations
-        if bb and bb.is_annotated:
-            pt1 = bb.point1
-            pt2 = bb.point2
-            if (bb.is_on_border()):
-                # draw two rectangles around the region of interest
-                rightBorderPoint = (videoWidth - 1, pt2[1])
-                cv2.rectangle(frame, pt1, rightBorderPoint, (0, 255, 0), 2)
-
-                leftBorderPoint = (0, pt1[1])
-                cv2.rectangle(frame, leftBorderPoint, pt2, (0, 255, 0), 2)
+        # resize window (lets define max width is 1600px)
+        if videoWidth < 1600:
+            cv2.namedWindow(self.WINDOW_NAME)
+        else:
+            cv2.namedWindow(self.WINDOW_NAME, cv2.WINDOW_NORMAL | cv2.WINDOW_KEEPRATIO)
+            whRatio = videoWidth / videoHeight
+            if whRatio == 2:
+                # pure equirectangular 2:1
+                cv2.resizeWindow(self.WINDOW_NAME, 1600, 800)
             else:
-                # draw a rectangle around the region of interest
-                cv2.rectangle(frame, pt1, pt2, (0, 255, 0), 2)
-        
-        # display first frame
-        # print("Frame #" + str(currentFrame))
-        cv2.putText(frame, "Frame #" + str(currentFrame), (20,30), cv2.FONT_HERSHEY_SIMPLEX, 0.75, (250, 250, 0), 2)
-        cv2.putText(frame, "Groundtruth : " + self._bbString(bb), (20,60), cv2.FONT_HERSHEY_SIMPLEX, 0.75, (0, 250, 0), 2)
-        cv2.imshow("VideoAnnotation", frame)
+                # default 16:9
+                cv2.resizeWindow(self.WINDOW_NAME, 1600, 900)
+
+            scaleFactor = videoWidth / 1600
+            self.RECTANGLE_BORDER_PX = int(self.RECTANGLE_BORDER_PX * scaleFactor)
+            self.FONT_SCALE = self.FONT_SCALE * scaleFactor
+            self.FONT_WEIGHT = int(self.FONT_WEIGHT * scaleFactor) + 1
+            self.TEXT_ROW1_POS = (int(self.TEXT_ROW1_POS[0] * scaleFactor), int(self.TEXT_ROW1_POS[1] * scaleFactor))
+            self.TEXT_ROW2_POS = (int(self.TEXT_ROW2_POS[0] * scaleFactor), int(self.TEXT_ROW2_POS[1] * scaleFactor))
         
         # prints just basic guide and info
         print("----------------------------------------------------")
@@ -141,19 +141,32 @@ class DrawAnnotation:
         print("Press 'Esc' or 'Q' key to exit")
         print("----------------------------------------------------")
 
-        # # if you want to have the FPS according to the video then uncomment this code
-        # # fps = cap.get(cv2.CAP_PROP_FPS)
-        fps = 30
+        # fps = 30
+        # FPS according to the video
+        fps = video.get(cv2.CAP_PROP_FPS)
         # calculate the interval between frame. 
         interval = int(1000/fps) 
 
+        # counter of frames
+        currentFrame = 0
+
+        # Just read first frame for sure
+        ok, frame = video.read()
+        if not ok:
+            print("Error - Could not read a video file")
+            video.release()
+            cv2.destroyAllWindows()
+            sys.exit(-1)
+
         # keep looping until end of video, or until 'q' or 'Esq' key pressed
         while True:
-            # Read a new frame
-            ok, frame = video.read()
-            if not ok:
-                break
+            if currentFrame > 0:
+                # Read a new frame
+                ok, frame = video.read()
+                if not ok:
+                    break
 
+            # inc frame counter
             currentFrame += 1
 
             # video might be longer than groundtruth annotations
@@ -167,19 +180,23 @@ class DrawAnnotation:
                     if (bb.is_on_border()):
                         # draw two rectangles around the region of interest
                         rightBorderPoint = (videoWidth - 1, pt2[1])
-                        cv2.rectangle(frame, pt1, rightBorderPoint, (0, 255, 0), 2)
+                        cv2.rectangle(frame, pt1, rightBorderPoint, (0, 255, 0), self.RECTANGLE_BORDER_PX)
 
                         leftBorderPoint = (0, pt1[1])
-                        cv2.rectangle(frame, leftBorderPoint, pt2, (0, 255, 0), 2)
+                        cv2.rectangle(frame, leftBorderPoint, pt2, (0, 255, 0), self.RECTANGLE_BORDER_PX)
                     else:
                         # draw a rectangle around the region of interest
-                        cv2.rectangle(frame, pt1, pt2, (0, 255, 0), 2)
+                        cv2.rectangle(frame, pt1, pt2, (0, 255, 0), self.RECTANGLE_BORDER_PX)
 
             # display (annotated) frame
-            # print("Frame #" + str(currentFrame))
-            cv2.putText(frame, "Frame #" + str(currentFrame), (20,30), cv2.FONT_HERSHEY_SIMPLEX, 0.75, (250, 250, 0), 2)
-            cv2.putText(frame, "Groundtruth : " + self._bbString(bb), (20,60), cv2.FONT_HERSHEY_SIMPLEX, 0.75, (0, 250, 0), 2)
-            cv2.imshow("VideoAnnotation", frame)
+            cv2.putText(frame, "Frame #" + str(currentFrame), self.TEXT_ROW1_POS, cv2.FONT_HERSHEY_SIMPLEX, self.FONT_SCALE, (250, 250, 0), self.FONT_WEIGHT)
+            cv2.putText(frame, "Groundtruth : " + self._bbString(bb), self.TEXT_ROW2_POS, cv2.FONT_HERSHEY_SIMPLEX, self.FONT_SCALE, (0, 250, 0), self.FONT_WEIGHT)
+            cv2.imshow(self.WINDOW_NAME, frame)
+            
+            # Save video with bounding box feature
+            # output_video.write(cv2.resize(frame, (1280,720)))
+            # output_video.write(cv2.resize(frame, (1440,720))) 
+            # output_video.write(cv2.resize(frame, (2880,1440))) 
             
             # Exit if ESC or Q pressed
             k = cv2.waitKey(interval) & 0xff
@@ -198,23 +215,43 @@ class DrawAnnotation:
         GT_PATH = self.directory_path + 'groundtruth.txt'
 
         # first read images
-        print("Reading all images - it might takes few seconds...")
+        print("Reading all images - it might take few seconds...")
         filenames = glob.glob(IMG_PATH)
         filenames.sort()
         images = [cv2.imread(img) for img in filenames]
 
         videoWidth = 0
+        videoHeight = 0
         if len(images) > 0:
-            _, width, _ = images[0].shape
+            height, width, _ = images[0].shape
             videoWidth = width
+            videoHeight = height
             # parse given groundtruth file
             self._parseGivenGroundtruth(GT_PATH, videoWidth)
         else:
             print("Error - No images to show.")
             sys.exit(-1)
 
-        # create window
-        cv2.namedWindow("ImagesAnnotation")
+        # resize window (lets define max width is 1600px)
+        if videoWidth < 1600:
+            cv2.namedWindow(self.WINDOW_NAME)
+        else:
+            cv2.namedWindow(self.WINDOW_NAME, cv2.WINDOW_NORMAL | cv2.WINDOW_KEEPRATIO)
+            whRatio = videoWidth / videoHeight
+            if whRatio == 2:
+                # pure equirectangular 2:1
+                cv2.resizeWindow(self.WINDOW_NAME, 1600, 800)
+            else:
+                # default 16:9
+                cv2.resizeWindow(self.WINDOW_NAME, 1600, 900)
+
+            scaleFactor = videoWidth / 1600
+            self.RECTANGLE_BORDER_PX = int(self.RECTANGLE_BORDER_PX * scaleFactor)
+            self.FONT_SCALE = self.FONT_SCALE * scaleFactor
+            self.FONT_WEIGHT = int(self.FONT_WEIGHT * scaleFactor) + 1
+            self.TEXT_ROW1_POS = (int(self.TEXT_ROW1_POS[0] * scaleFactor), int(self.TEXT_ROW1_POS[1] * scaleFactor))
+            self.TEXT_ROW2_POS = (int(self.TEXT_ROW2_POS[0] * scaleFactor), int(self.TEXT_ROW2_POS[1] * scaleFactor))
+        
 
         # counter of frames
         currentFrame = 1
@@ -228,19 +265,18 @@ class DrawAnnotation:
             if (bb.is_on_border()):
                 # draw two rectangles around the region of interest
                 rightBorderPoint = (videoWidth - 1, pt2[1])
-                cv2.rectangle(images[currentFrame - 1], pt1, rightBorderPoint, (0, 255, 0), 2)
+                cv2.rectangle(images[currentFrame - 1], pt1, rightBorderPoint, (0, 255, 0), self.RECTANGLE_BORDER_PX)
 
                 leftBorderPoint = (0, pt1[1])
-                cv2.rectangle(images[currentFrame - 1], leftBorderPoint, pt2, (0, 255, 0), 2)
+                cv2.rectangle(images[currentFrame - 1], leftBorderPoint, pt2, (0, 255, 0), self.RECTANGLE_BORDER_PX)
             else:
                 # draw a rectangle around the region of interest
-                cv2.rectangle(images[currentFrame - 1], pt1, pt2, (0, 255, 0), 2)
+                cv2.rectangle(images[currentFrame - 1], pt1, pt2, (0, 255, 0), self.RECTANGLE_BORDER_PX)
         
         # show first frame
-        # print("Frame #" + str(currentFrame))
-        cv2.putText(images[currentFrame - 1], "Frame #" + str(currentFrame) + " - Press 'Enter' or 'C' for next frame", (20,30), cv2.FONT_HERSHEY_SIMPLEX, 0.75, (250, 250, 0), 2)
-        cv2.putText(images[currentFrame - 1], "Groundtruth : " + self._bbString(bb), (20,60), cv2.FONT_HERSHEY_SIMPLEX, 0.75, (0, 250, 0), 2)
-        cv2.imshow("ImagesAnnotation", images[currentFrame - 1])
+        cv2.putText(images[currentFrame - 1], "Frame #" + str(currentFrame) + " - Press 'Enter' or 'C' for next frame", self.TEXT_ROW1_POS, cv2.FONT_HERSHEY_SIMPLEX, self.FONT_SCALE, (250, 250, 0), self.FONT_WEIGHT)
+        cv2.putText(images[currentFrame - 1], "Groundtruth : " + self._bbString(bb), self.TEXT_ROW2_POS, cv2.FONT_HERSHEY_SIMPLEX, self.FONT_SCALE, (0, 250, 0), self.FONT_WEIGHT)
+        cv2.imshow(self.WINDOW_NAME, images[currentFrame - 1])
 
         # prints just basic guide and info
         print("----------------------------------------------------")
@@ -272,19 +308,18 @@ class DrawAnnotation:
                     if (bb.is_on_border()):
                         # draw two rectangles around the region of interest
                         rightBorderPoint = (videoWidth - 1, pt2[1])
-                        cv2.rectangle(images[currentFrame - 1], pt1, rightBorderPoint, (0, 255, 0), 2)
+                        cv2.rectangle(images[currentFrame - 1], pt1, rightBorderPoint, (0, 255, 0), self.RECTANGLE_BORDER_PX)
 
                         leftBorderPoint = (0, pt1[1])
-                        cv2.rectangle(images[currentFrame - 1], leftBorderPoint, pt2, (0, 255, 0), 2)
+                        cv2.rectangle(images[currentFrame - 1], leftBorderPoint, pt2, (0, 255, 0), self.RECTANGLE_BORDER_PX)
                     else:
                         # draw a rectangle around the region of interest
-                        cv2.rectangle(images[currentFrame - 1], pt1, pt2, (0, 255, 0), 2)
+                        cv2.rectangle(images[currentFrame - 1], pt1, pt2, (0, 255, 0), self.RECTANGLE_BORDER_PX)
                 
-                # show frame
-                        
-                cv2.putText(images[currentFrame - 1], "Frame #" + str(currentFrame) + " - Press 'Enter' or 'C' for next frame", (20,30), cv2.FONT_HERSHEY_SIMPLEX, 0.75, (250, 250, 0), 2)
-                cv2.putText(images[currentFrame - 1], "Groundtruth : " + self._bbString(bb), (20,60), cv2.FONT_HERSHEY_SIMPLEX, 0.75, (0, 250, 0), 2)
-                cv2.imshow("ImagesAnnotation", images[currentFrame - 1])
+                # show frame      
+                cv2.putText(images[currentFrame - 1], "Frame #" + str(currentFrame) + " - Press 'Enter' or 'C' for next frame", self.TEXT_ROW1_POS, cv2.FONT_HERSHEY_SIMPLEX, self.FONT_SCALE, (250, 250, 0), self.FONT_WEIGHT)
+                cv2.putText(images[currentFrame - 1], "Groundtruth : " + self._bbString(bb), self.TEXT_ROW2_POS, cv2.FONT_HERSHEY_SIMPLEX, self.FONT_SCALE, (0, 250, 0), self.FONT_WEIGHT)
+                cv2.imshow(self.WINDOW_NAME, images[currentFrame - 1])
             # exit on 'ESC' or 'q' key
             elif key == 27  or key == ord('q'): 
                 break

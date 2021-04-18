@@ -4,14 +4,13 @@
 ##### run_annotation
 
 ```
+# run annotation tool without existing groundtruth data
 python run_annotation_tool.py -v annotation/dataset/01/01.mp4
-```
 
-```
+# run annotation tool with existing groundtruth data - parse groundtruth and possible update
 python run_annotation_tool.py -v annotation/dataset/01/01.mp4 -gt annotation/dataset/01/groundtruth.txt
-```
 
-```
+# run annotation tool and save frames as *.jpg images when annotating
 python run_annotation_tool.py -v annotation/dataset/01/01.mp4 --save
 ```
 
@@ -19,14 +18,13 @@ python run_annotation_tool.py -v annotation/dataset/01/01.mp4 --save
 ##### run_draw_annotation
 
 ```
+# demo of drawing annotations
 python run_draw_annotation.py --demo
-```
 
-```
+# drawing annotations in video frames in given dataset directory
 python run_draw_annotation.py -dir annotation/dataset/03
-```
 
-```
+# drawing annotations in images sequence in given dataset directory
 python run_draw_annotation.py -dir annotation/dataset/03 -img
 ```
 
@@ -34,14 +32,13 @@ python run_draw_annotation.py -dir annotation/dataset/03 -img
 ##### run_evaluation
 
 ```
+# running demo evaluation - just show groundtruth and result data
 python run_evaluation.py -demo
-```
 
-```
+# run evaluation for given video, groundtruth and result data
 python run_evaluation.py -video annotation/dataset/03/03.mp4 -gt annotation/dataset/03/groundtruth.txt -result annotation/results/CSRT/03-result-borders.txt
-```
 
-```
+# run evaluation for given images sequence directory, groundtruth and result data
 python run_evaluation.py -img annotation/dataset/03/img/ -gt annotation/dataset/03/groundtruth.txt -result annotation/results/CSRT/03-result-borders.txt
 ```
 
