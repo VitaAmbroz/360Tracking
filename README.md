@@ -18,7 +18,7 @@ TODO - brief description
 
 New dataset with annotated objects in 360° equirectangular video has been created. You can see demo of this dataset [here](./code/annotation/dataset-demo/demo-annotation) or on [YouTube](https://www.youtube.com/watch?v=kgXd6uoXa8M).
 
-You can download full dataset using script `bash ./code/dataset_download.sh` or you can download it manually as [zip]([https://drive.google.com/file/d/19mwqrk45cTo2k72gpQDlQa2uCDaT3FM-/view?usp=sharing](https://drive.google.com/file/d/19mwqrk45cTo2k72gpQDlQa2uCDaT3FM-/view?usp=sharing&fbclid=IwAR0mrT4ETgkJZYDGQjfDRGnMEVQLvCGJJ4Se9XlWfCp0PTRO8pMoTtDi86g)) or [folder](https://drive.google.com/drive/folders/13tkE4vY3FGGD42kDIjyS9K423vrvpKoU?usp=sharing).
+You can download full dataset using script `bash ./code/dataset_download.sh` or you can download it manually as [zip](https://drive.google.com/file/d/19mwqrk45cTo2k72gpQDlQa2uCDaT3FM-/view?usp=sharing) or [folder](https://drive.google.com/drive/folders/13tkE4vY3FGGD42kDIjyS9K423vrvpKoU?usp=sharing).
 
 The videos used in this dataset has been taken from these resources (dataset 1 a 2 have been also reannotated):
 
