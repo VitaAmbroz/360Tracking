@@ -6,6 +6,10 @@
 # dataset
 /code/annotation/dataset/*
 
-# uncomment the most important tracking folder later..
-/code/run_tracking.py
-/code/opencv_tracking/*
+# tracking
+/code/opencv_tracking/__pycache__
+/code/opencv_tracking/img-translation.py
+/code/opencv_tracking/nfov.py
+/code/opencv_tracking/opencv-trackers-border.py
+/code/opencv_tracking/opencv-trackers-rect.py
+/code/opencv_tracking/opencv-trackers.py

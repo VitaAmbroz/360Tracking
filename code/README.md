@@ -44,4 +44,14 @@ python run_evaluation.py -img annotation/dataset/03/img/ -gt annotation/dataset/
 
 
 ##### run_tracking
+```
+python run_opencv_tracking.py -t CSRT -v annotation/dataset/01/01.mp4
 
+python run_opencv_tracking.py -t CSRT -v annotation/dataset/01/01.mp4 -gt annotation/dataset/01/groundtruth.txt
+
+python run_opencv_tracking.py -t CSRT -v annotation/dataset/01/01.mp4 -gt annotation/dataset/01/groundtruth.txt -border
+
+python run_opencv_tracking.py -t CSRT -v annotation/dataset/01/01.mp4 -gt annotation/dataset/01/groundtruth.txt -rect
+
+python run_opencv_tracking.py -t CSRT -v annotation/dataset/01/01.mp4 -gt annotation/dataset/01/groundtruth.txt -center
+```

@@ -1,3 +1,13 @@
+#################################################################################################
+# Visual object tracking in panoramic video
+# Master thesis at Brno University of Technology - Faculty of Information Technology
+# Author:       Vít Ambrož (xambro15@stud.fit.vutbr.cz)
+# Supervisor:   Doc. Ing. Martin Čadík, Ph.D.
+# Module:       boundingbox.py
+# Description:  Simple representation of bounding box for object annotation
+#               Basic support of object left/right border crossing in equirectangular panorama 
+#################################################################################################
+
 class BoundingBox():
     def __init__(self, point1, point2, frame_width):
         self.point1 = point1
