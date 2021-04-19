@@ -13,3 +13,8 @@
 /code/opencv_tracking/opencv-trackers-border.py
 /code/opencv_tracking/opencv-trackers-rect.py
 /code/opencv_tracking/opencv-trackers.py
+
+# external repository - dont add to my repository
+/code/pytracking
+/code/TracKit
+/code/DaSiamRPN

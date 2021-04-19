@@ -54,4 +54,18 @@ python run_opencv_tracking.py -t CSRT -v annotation/dataset/01/01.mp4 -gt annota
 python run_opencv_tracking.py -t CSRT -v annotation/dataset/01/01.mp4 -gt annotation/dataset/01/groundtruth.txt -rect
 
 python run_opencv_tracking.py -t CSRT -v annotation/dataset/01/01.mp4 -gt annotation/dataset/01/groundtruth.txt -center
+
+
+python pytracking/pytracking/run_video_default.py atom default annotation/dataset/01/01.mp4 -gt annotation/dataset/01/groundtruth.txt
+
+python pytracking/pytracking/run_video_default.py dimp dimp50 annotation/dataset/01/01.mp4 -gt annotation/dataset/01/groundtruth.txt
+
+python pytracking/pytracking/run_video_default.py dimp dimp18 annotation/dataset/02/02.mp4
+
+python pytracking/pytracking/run_video_default.py atom default annotation/dataset/03/03.mp4
+
+python pytracking/pytracking/run_video_default.py kys default annotation/dataset/01/01.mp4
+
+python pytracking/pytracking/run_video_default.py eco default annotation/dataset/01/01.mp4
 ```
+
