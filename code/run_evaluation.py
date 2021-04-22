@@ -11,7 +11,12 @@ import argparse
 import os
 import sys
 
-from annotation.evaluation import Evaluation
+currentdir = os.path.dirname(os.path.realpath(__file__))
+parentdir = os.path.dirname(currentdir)
+sys.path.insert(0, parentdir)
+
+from code.annotation import Evaluation
+# from annotation.evaluation import Evaluation
 
 ###############################################################
 ###############            MAIN              ##################
@@ -24,6 +29,7 @@ if __name__ == '__main__':
     ap.add_argument("-video", "--video", required=False, help="Path to the video")
     ap.add_argument("-img", "--img", required=False, help="Path to images sequence")
     ap.add_argument("-demo", "--demo", action='store_true', help="Path to the dataset-demo directory - annotation/dataset-demo/demo-annotation/.")
+    ap.add_argument("-iou", "--iou", action='store_true', help="Flag for computing Intersection over Union")
     args = vars(ap.parse_args())
 
     # handle video/img/demo path
@@ -63,10 +69,15 @@ if __name__ == '__main__':
 
     # create instance for evaluation
     evaluation = Evaluation(path, gt_path, result_path)
-
+    
     if args["img"]:
-        # run drawing on images sequence
+        # useful debugging - run drawing on images sequence (all images must be stored in given directory path)
         evaluation.runImageSeq()
     else:
-        # run video (that is default, flag -v is there just for strict call)
-        evaluation.runVideo()
+        evaluation.loadInit()
+        # just compute Intersection over Union between groundtruth and result bounding boxes
+        if args["iou"]:
+            evaluation.computeIntersectionOverUnion()
+        else:
+            # run video - default
+            evaluation.runVideo()

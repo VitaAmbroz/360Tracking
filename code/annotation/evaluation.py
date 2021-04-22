@@ -12,11 +12,13 @@ import sys
 import glob
 import os
 
-from boundingbox.boundingbox import BoundingBox
+currentdir = os.path.dirname(os.path.realpath(__file__))
+parentdir = os.path.dirname(currentdir)
+sys.path.insert(0, parentdir)
 
-
-# TODO resizeWindow + correct circles, rectangles and text scaling when resizeWindow
-# TODO add methods for computing selected metrics
+from code.boundingbox import Parser
+from code.boundingbox import BoundingBox
+# from boundingbox.boundingbox import BoundingBox
 
 class Evaluation:
     def __init__(self, path: str, groundtruthPath: str, resultPath: str):
@@ -32,6 +34,13 @@ class Evaluation:
         # path of file with groundtruth data 
         self.result_path = resultPath
 
+        # enable parsing/creating methods 
+        self.parser = Parser()
+
+        self.video = None
+        self.video_width = None
+        self.video_height = None
+
         # constants for sizes and positions of opencv rectangles and texts
         self.RECTANGLE_BORDER_PX = 2
         self.FONT_SCALE = 0.75
@@ -45,66 +54,18 @@ class Evaluation:
         self.WINDOW_NAME = "Evaluation"
 
 
-    # method for parsing ground truth data / result data from given filepath
-    def _parseGivenDataFile(self, path, videoWidth, boundingBoxes):
-        dataFile = open(path, 'r')
-        lines = dataFile.readlines()
-
-        for line in lines:
-            # split line by comma char
-            line_arr = line.split(',')
-
-            if (line_arr[1] != 'nan' and line_arr[2] != 'nan' and line_arr[3] != 'nan' and line_arr[4] != 'nan'):
-                x1 = int(line_arr[1])
-                y1 = int(line_arr[2])
-                # point 2 could be normalized because of border problem
-                x2 = int(line_arr[1]) + int(line_arr[3])
-                y2 = int(line_arr[2]) + int(line_arr[4])
-                if x2 > videoWidth:
-                    x2 = x2 - videoWidth
-
-                bb = BoundingBox((x1, y1), (x2, y2), videoWidth)
-                bb.is_annotated = True
-                # save bounding box to bb list
-                boundingBoxes.append(bb)
-            else:
-                bb = BoundingBox(None, None, videoWidth)
-                bb.is_annotated = False
-                # save unannotated bounding box to bb list
-                boundingBoxes.append(bb)
-
-
-    # method for creating string representation of annotated bounding box
-    def _bbString(self, bb):
-        groundTruthFrame = ""
-        if bb and bb.is_annotated:
-            groundTruthFrame += str(bb.get_x1()) + ","
-            groundTruthFrame += str(bb.get_y1()) + ","
-            groundTruthFrame += str(bb.get_width()) + ","
-            groundTruthFrame += str(bb.get_height())
-        else:
-            groundTruthFrame += "nan,nan,nan,nan"
-        return groundTruthFrame
-
-
-    # method for running video and drawing groundtruth + result bounding boxes
-    def runVideo(self):
+    # method for loading video, groundtruth and result data
+    def loadInit(self):
         # Read video
-        video = cv2.VideoCapture(self.path)
+        self.video = cv2.VideoCapture(self.path)
         # Exit if video not opened.
-        if not video.isOpened():
+        if not self.video.isOpened():
             print("Error - Could not open video")
             sys.exit(-1)
 
-        # Read first frame.
-        ok, frame = video.read()
-        if not ok:
-            print("Error - Could not read a video file")
-            sys.exit(-1)
-
         # store video width/height to variables
-        videoWidth = int(video.get(cv2.CAP_PROP_FRAME_WIDTH))
-        videoHeight = int(video.get(cv2.CAP_PROP_FRAME_HEIGHT))
+        self.video_width = int(self.video.get(cv2.CAP_PROP_FRAME_WIDTH))
+        self.video_height = int(self.video.get(cv2.CAP_PROP_FRAME_HEIGHT))
 
         # Read and parse existing groundtruth file
         if not(os.path.exists(self.groundtruth_path)):
@@ -122,15 +83,63 @@ class Evaluation:
         self.result_bounding_boxes = []
 
         # parsing groundtruth and result files
-        self._parseGivenDataFile(self.groundtruth_path, videoWidth, self.gt_bounding_boxes)
-        self._parseGivenDataFile(self.result_path, videoWidth, self.result_bounding_boxes)
+        self.gt_bounding_boxes = self.parser.parseGivenDataFile(self.groundtruth_path, self.video_width)
+        self.result_bounding_boxes = self.parser.parseGivenDataFile(self.result_path, self.video_width)
 
+
+    # method for computing IoU metric between groundtruth and result bounding boxes
+    # Intersection over Union is an evaluation metric used to measure the accuracy of an object tracker/detector...
+    def computeIntersectionOverUnion(self):
+        if len(self.gt_bounding_boxes) == len(self.result_bounding_boxes):
+            # loop in bounding_boxes lists
+            for idx in range(len(self.gt_bounding_boxes)):
+                gt_bbox = self.gt_bounding_boxes[idx]
+                result_bbox = self.result_bounding_boxes[idx]
+
+                iou = self.intersectionOverUnion(gt_bbox, result_bbox)
+                print("Frame #" + str(idx+1) + " : " + str(iou))
+
+
+    # inspired and modified from https://www.pyimagesearch.com/2016/11/07/intersection-over-union-iou-for-object-detection/
+    def intersectionOverUnion(self, bboxA: BoundingBox, bboxB: BoundingBox):
+        # check if there are coordinates of bounding boxes
+        if bboxA.point1 and bboxA.point2 and bboxB.point1 and bboxB.point2:
+            # determine the (x,y)-coordinates of the intersection rectangle
+            left_top_x = max(bboxA.get_point1_x(), bboxB.get_point1_x())
+            left_top_y = max(bboxA.get_point1_y(), bboxB.get_point1_y())
+
+            # not using point2 directly for right_bottom 
+            # because point1 could be on right border, and point2 could be on left border of image
+            right_bottom_x = min(bboxA.get_point1_x() + bboxA.get_width(), bboxB.get_point1_x() + bboxB.get_width())
+            right_bottom_y = min(bboxA.get_point1_y() + bboxA.get_height(), bboxB.get_point1_y() + bboxB.get_height())
+
+            # compute the area of intersection rectangle (inc +1 because of zero indexing in pixels coordinates)
+            intersection_area = max(0, right_bottom_x - left_top_x + 1) * max(0, right_bottom_y - left_top_y + 1)
+
+            # compute the area of both the prediction and ground-truth rectangles
+            bboxA_area = bboxA.get_width() * bboxA.get_height()
+            bboxB_area = bboxB.get_width() * bboxB.get_height()
+
+            # compute the intersection over union by taking the intersection area
+            # and dividing it by the sum of result + ground-truth areas - the interesection area
+            iou = intersection_area / float(bboxA_area + bboxB_area - intersection_area)
+
+            # return the intersection over union value
+            return iou
+        elif not(bboxA.point1) and not(bboxA.point2) and not(bboxB.point1) and not(bboxB.point2):
+            return 1.0
+        else:
+            return 0.0
+
+
+    # method for running video and drawing groundtruth + result bounding boxes
+    def runVideo(self):
         # resize window (lets define max width is 1600px)
-        if videoWidth < 1600:
+        if self.video_width < 1600:
             cv2.namedWindow(self.WINDOW_NAME)
         else:
             cv2.namedWindow(self.WINDOW_NAME, cv2.WINDOW_NORMAL | cv2.WINDOW_KEEPRATIO)
-            whRatio = videoWidth / videoHeight
+            whRatio = self.video_width / self.video_height
             if whRatio == 2:
                 # pure equirectangular 2:1
                 cv2.resizeWindow(self.WINDOW_NAME, 1600, 800)
@@ -138,7 +147,7 @@ class Evaluation:
                 # default 16:9
                 cv2.resizeWindow(self.WINDOW_NAME, 1600, 900)
 
-            scaleFactor = videoWidth / 1600
+            scaleFactor = self.video_width / 1600
             self.RECTANGLE_BORDER_PX = int(self.RECTANGLE_BORDER_PX * scaleFactor)
             self.FONT_SCALE = self.FONT_SCALE * scaleFactor
             self.FONT_WEIGHT = int(self.FONT_WEIGHT * scaleFactor) + 1
@@ -156,7 +165,7 @@ class Evaluation:
         print("----------------------------------------------------")
 
         # FPS according to the original video
-        fps = video.get(cv2.CAP_PROP_FPS)
+        fps = self.video.get(cv2.CAP_PROP_FPS)
         # fps = 30
         # calculate the interval between frame. 
         interval = int(1000/fps) 
@@ -165,10 +174,10 @@ class Evaluation:
         currentFrame = 0
 
         # Just read first frame for sure
-        ok, frame = video.read()
+        ok, frame = self.video.read()
         if not ok:
             print("Error - Could not read a video file")
-            video.release()
+            self.video.release()
             cv2.destroyAllWindows()
             sys.exit(-1)
 
@@ -176,7 +185,7 @@ class Evaluation:
         while True:
             if currentFrame > 0:
                 # Read a new frame
-                ok, frame = video.read()
+                ok, frame = self.video.read()
                 if not ok:
                     break
 
@@ -192,7 +201,7 @@ class Evaluation:
                     pt2 = gt_bb.point2
                     if (gt_bb.is_on_border()):
                         # draw two rectangles around the region of interest
-                        rightBorderPoint = (videoWidth - 1, pt2[1])
+                        rightBorderPoint = (self.video_width - 1, pt2[1])
                         cv2.rectangle(frame, pt1, rightBorderPoint, (0, 255, 0), self.RECTANGLE_BORDER_PX)
 
                         leftBorderPoint = (0, pt1[1])
@@ -209,7 +218,7 @@ class Evaluation:
                     pt2 = res_bb.point2
                     if (res_bb.is_on_border()):
                         # draw two rectangles around the region of interest
-                        rightBorderPoint = (videoWidth - 1, pt2[1])
+                        rightBorderPoint = (self.video_width - 1, pt2[1])
                         cv2.rectangle(frame, pt1, rightBorderPoint, (255, 0, 0), self.RECTANGLE_BORDER_PX)
 
                         leftBorderPoint = (0, pt1[1])
@@ -223,9 +232,9 @@ class Evaluation:
             # print("Frame #" + str(currentFrame))
             cv2.putText(frame, "Frame #" + str(currentFrame), (20,30), cv2.FONT_HERSHEY_SIMPLEX, self.FONT_SCALE, (250, 250, 0), self.FONT_WEIGHT)
             cv2.putText(frame, "Groundtruth (green)", self.TEXT_ROW2_POS, cv2.FONT_HERSHEY_SIMPLEX, self.FONT_SCALE, (0, 250, 0), self.FONT_WEIGHT)
-            cv2.putText(frame, ": " + self._bbString(gt_bb), self.TEXT_ROW2_POS2, cv2.FONT_HERSHEY_SIMPLEX, self.FONT_SCALE, (0, 250, 0), self.FONT_WEIGHT)
+            cv2.putText(frame, ": " + self.parser.bboxString(gt_bb), self.TEXT_ROW2_POS2, cv2.FONT_HERSHEY_SIMPLEX, self.FONT_SCALE, (0, 250, 0), self.FONT_WEIGHT)
             cv2.putText(frame, "Tracker result (blue)", self.TEXT_ROW3_POS, cv2.FONT_HERSHEY_SIMPLEX, self.FONT_SCALE, (250, 0, 0), self.FONT_WEIGHT)
-            cv2.putText(frame, ": " + self._bbString(res_bb), self.TEXT_ROW3_POS2, cv2.FONT_HERSHEY_SIMPLEX, self.FONT_SCALE, (250, 0, 0), self.FONT_WEIGHT)
+            cv2.putText(frame, ": " + self.parser.bboxString(res_bb), self.TEXT_ROW3_POS2, cv2.FONT_HERSHEY_SIMPLEX, self.FONT_SCALE, (250, 0, 0), self.FONT_WEIGHT)
             cv2.imshow(self.WINDOW_NAME, frame)
             
             # Exit if ESC or Q pressed
@@ -233,10 +242,11 @@ class Evaluation:
             if k == 27 or k == ord('q'):
                 break
 
-        video.release()
+        self.video.release()
         cv2.destroyAllWindows()
 
 
+    # TOREMOVE? - images sequence maybe not supported here
     # method for running images .jpg sequence and drawing groundtruth + result bounding boxes
     def runImageSeq(self):
         if not(self.path.endswith("/")):
@@ -298,8 +308,8 @@ class Evaluation:
         self.result_bounding_boxes = []
 
         # parsing groundtruth and result files
-        self._parseGivenDataFile(self.groundtruth_path, videoWidth, self.gt_bounding_boxes)
-        self._parseGivenDataFile(self.result_path, videoWidth, self.result_bounding_boxes)
+        self.gt_bounding_boxes = self.parser.parseGivenDataFile(self.groundtruth_path, videoWidth)
+        self.result_bounding_boxes = self.parser.parseGivenDataFile(self.result_path, videoWidth)
 
         # counter of frames
         currentFrame = 1
@@ -345,9 +355,9 @@ class Evaluation:
         # print("Frame #" + str(currentFrame))
         cv2.putText(images[currentFrame - 1], "Frame #" + str(currentFrame), self.TEXT_ROW1_POS, cv2.FONT_HERSHEY_SIMPLEX, self.FONT_SCALE, (250, 250, 0), self.FONT_WEIGHT)
         cv2.putText(images[currentFrame - 1], "Groundtruth (green)", self.TEXT_ROW2_POS, cv2.FONT_HERSHEY_SIMPLEX, self.FONT_SCALE, (0, 250, 0), self.FONT_WEIGHT)
-        cv2.putText(images[currentFrame - 1], ": " + self._bbString(gt_bb), self.TEXT_ROW2_POS2, cv2.FONT_HERSHEY_SIMPLEX, self.FONT_SCALE, (0, 250, 0), self.FONT_WEIGHT)
+        cv2.putText(images[currentFrame - 1], ": " + self.parser.bboxString(gt_bb), self.TEXT_ROW2_POS2, cv2.FONT_HERSHEY_SIMPLEX, self.FONT_SCALE, (0, 250, 0), self.FONT_WEIGHT)
         cv2.putText(images[currentFrame - 1], "Tracker result (blue)", self.TEXT_ROW3_POS, cv2.FONT_HERSHEY_SIMPLEX, self.FONT_SCALE, (250, 0, 0), self.FONT_WEIGHT)
-        cv2.putText(images[currentFrame - 1], ": " + self._bbString(res_bb), self.TEXT_ROW3_POS2, cv2.FONT_HERSHEY_SIMPLEX, self.FONT_SCALE, (250, 0, 0), self.FONT_WEIGHT)
+        cv2.putText(images[currentFrame - 1], ": " + self.parser.bboxString(res_bb), self.TEXT_ROW3_POS2, cv2.FONT_HERSHEY_SIMPLEX, self.FONT_SCALE, (250, 0, 0), self.FONT_WEIGHT)
         cv2.imshow(self.WINDOW_NAME, images[currentFrame - 1])
 
         # prints just basic guide and info
@@ -411,9 +421,9 @@ class Evaluation:
                 # print("Frame #" + str(currentFrame))
                 cv2.putText(images[currentFrame - 1], "Frame #" + str(currentFrame), self.TEXT_ROW1_POS, cv2.FONT_HERSHEY_SIMPLEX, self.FONT_SCALE, (250, 250, 0), self.FONT_WEIGHT)
                 cv2.putText(images[currentFrame - 1], "Groundtruth (green)", self.TEXT_ROW2_POS, cv2.FONT_HERSHEY_SIMPLEX, self.FONT_SCALE, (0, 250, 0), self.FONT_WEIGHT)
-                cv2.putText(images[currentFrame - 1], ": " + self._bbString(gt_bb), self.TEXT_ROW2_POS2, cv2.FONT_HERSHEY_SIMPLEX, self.FONT_SCALE, (0, 250, 0), self.FONT_WEIGHT)
+                cv2.putText(images[currentFrame - 1], ": " + self.parser.bboxString(gt_bb), self.TEXT_ROW2_POS2, cv2.FONT_HERSHEY_SIMPLEX, self.FONT_SCALE, (0, 250, 0), self.FONT_WEIGHT)
                 cv2.putText(images[currentFrame - 1], "Tracker result (blue)", self.TEXT_ROW3_POS, cv2.FONT_HERSHEY_SIMPLEX, self.FONT_SCALE, (250, 0, 0), self.FONT_WEIGHT)
-                cv2.putText(images[currentFrame - 1], ": " + self._bbString(res_bb), self.TEXT_ROW3_POS2, cv2.FONT_HERSHEY_SIMPLEX, self.FONT_SCALE, (250, 0, 0), self.FONT_WEIGHT)
+                cv2.putText(images[currentFrame - 1], ": " + self.parser.bboxString(res_bb), self.TEXT_ROW3_POS2, cv2.FONT_HERSHEY_SIMPLEX, self.FONT_SCALE, (250, 0, 0), self.FONT_WEIGHT)
                 cv2.imshow(self.WINDOW_NAME, images[currentFrame - 1])
             # exit on 'ESC' or 'q' key
             elif key == 27  or key == ord('q'): 

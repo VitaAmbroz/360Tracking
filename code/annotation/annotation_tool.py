@@ -13,7 +13,13 @@ import argparse
 import sys
 import os
 
-from boundingbox.boundingbox import BoundingBox
+currentdir = os.path.dirname(os.path.realpath(__file__))
+parentdir = os.path.dirname(currentdir)
+sys.path.insert(0, parentdir)
+
+from code.boundingbox import Parser
+from code.boundingbox import BoundingBox
+# from boundingbox.boundingbox import BoundingBox
 
 
 class AnnotationTool:
@@ -36,6 +42,9 @@ class AnnotationTool:
         self.video_path = videoPath                 # path of video file 
         self.groundtruth_path = groundtruthPath     # path of file with groundtruth data 
         self.save_images = saveImages               # flag for saving frame as .jpg images
+        
+        # enable parsing/creating methods 
+        self.parser = Parser()
 
         self.GT_PATH = "groundtruth.txt"            # path for possible created groundtruth.txt file
         self.SEQ_IMAGES_PATH = "img"                # directory for possible frames saving
@@ -50,71 +59,6 @@ class AnnotationTool:
         self.TEXT_ROW3_POS = (20,75)
 
         self.WINDOW_NAME = "AnnotationTool"
-
-    # method for parsing ground truth data from given filepath
-    def _parseGivenGroundtruth(self, path: str):
-        # Read and parse existing groundtruth file
-        if not(os.path.exists(path)):
-            print("Error - Could not read a groundtruth file")
-            sys.exit()
-
-        groundtruthFile = open(path, 'r')
-        lines = groundtruthFile.readlines()
-
-        for line in lines:
-            # split line by comma char
-            line_arr = line.split(',')
-
-            if (line_arr[1] != 'nan' and line_arr[2] != 'nan' and line_arr[3] != 'nan' and line_arr[4] != 'nan'):
-                x1 = int(line_arr[1])
-                y1 = int(line_arr[2])
-                # point 2 could be normalized because of border problem
-                x2 = int(line_arr[1]) + int(line_arr[3])
-                y2 = int(line_arr[2]) + int(line_arr[4])
-                if x2 > self.video_width:
-                    x2 = x2 - self.video_width
-
-                bb = BoundingBox((x1, y1), (x2, y2), self.video_width)
-                bb.is_annotated = True
-                # save bounding box to global list
-                self.bounding_boxes.append(bb)
-            else:
-                bb = BoundingBox(None, None, self.video_width)
-                bb.is_annotated = False
-                # save unannotated bounding box to global list
-                self.bounding_boxes.append(bb)
-
-
-    # method for creating string representing all annotated data (bounding_boxes list)
-    def _createGroundTruth(self, boundingBoxesList):
-        groundTruthResult = ""
-        # loop in bounding_boxes list
-        for idx in range(len(boundingBoxesList)):
-            bb = boundingBoxesList[idx]
-            groundTruthResult += self._createGroundTruthFrame(idx + 1, bb)
-        return groundTruthResult
-
-
-    # method for creating string representing annotated data of one frame
-    def _createGroundTruthFrame(self, currentFrame: int, bb):
-        groundTruthFrame = ""
-        if bb and bb.is_annotated:
-            groundTruthFrame += str(currentFrame) + ","
-            groundTruthFrame += str(bb.get_x1()) + ","
-            groundTruthFrame += str(bb.get_y1()) + ","
-            groundTruthFrame += str(bb.get_width()) + ","
-            groundTruthFrame += str(bb.get_height()) + "\n"
-        else:
-            groundTruthFrame += str(currentFrame) + ",nan,nan,nan,nan\n"
-        return groundTruthFrame
-
-
-    # method for creating file and writing data (overwrite file if already exists)
-    def _saveGroundTruthToFile(self, path: str, data):
-        newFile = open(path, "w")
-        newFile.write(data)
-        newFile.close()
-
 
     # method for drawing rectangle according to points 
     def _drawBoundingBox(self, point1, point2, boundingBox, color, thickness):
@@ -136,16 +80,16 @@ class AnnotationTool:
             # current frame has been annotated
             self.bounding_box.is_annotated = True
             # debugging info about annotation process - usable for user
-            dbg = self._createGroundTruthFrame(self.current_frame, self.bounding_box)
-            print("Frame #" + str(self.current_frame) + " - Annotation OK: " + dbg[:-1])
+            dbg = self.parser.bboxString(self.bounding_box)
+            print("Frame #" + str(self.current_frame) + " - Annotation OK: " + dbg)
         else:
             # current frame has not been annotated
             # new instance of bounding box
             self.bounding_box = BoundingBox(self.pt1, self.pt2, self.video_width)
             self.bounding_box.is_annotated = False
             # debugging info about annotation process - usable for user
-            dbg = self._createGroundTruthFrame(self.current_frame, self.bounding_box)
-            print("Frame #" + str(self.current_frame) + " - Annotation OK (Empty): " + dbg[:-1])
+            dbg = self.parser.bboxString(self.bounding_box)
+            print("Frame #" + str(self.current_frame) + " - Annotation OK (Empty): " + dbg)
 
         # create copy of frame before drawing
         self.bounding_box.frame_copy = frameClone.copy()
@@ -177,26 +121,13 @@ class AnnotationTool:
                 self.pt2 = prev.point2
 
 
-    # method for creating string representation of annotated bounding box
-    def _bbString(self, bb):
-        groundTruthFrame = ""
-        if bb and bb.point1 and bb.point2:
-            groundTruthFrame += str(bb.get_x1()) + ","
-            groundTruthFrame += str(bb.get_y1()) + ","
-            groundTruthFrame += str(bb.get_width()) + ","
-            groundTruthFrame += str(bb.get_height())
-        else:
-            groundTruthFrame += "nan,nan,nan,nan"
-        return groundTruthFrame
-    
-
     # method for drawing help + annotations directly to frame
     def _textToFrame(self):
         if self.help_text:
             # show Frame #currect_frame : bounding_box
             annotation = "nan,nan,nan,nan"
             if self.bounding_box:
-                annotation = self._bbString(self.bounding_box)
+                annotation = self.parser.bboxString(self.bounding_box)
             elif self.pt1:
                 annotation = str(self.pt1[0]) + "," + str(self.pt1[1]) + ",nan,nan"
 
@@ -269,10 +200,9 @@ class AnnotationTool:
 
         # check if there is groundtruth file given
         if self.groundtruth_path:
-            self._parseGivenGroundtruth(self.groundtruth_path)
+            self.bounding_boxes = self.parser.parseGivenDataFile(self.groundtruth_path, self.video_width)
 
         # resize window (lets define max width is 1600px)
-        # TODO optimalization circles, rectangles and text scaling when resizeWindow
         if self.video_width < 1600:
             cv2.namedWindow(self.WINDOW_NAME)
         else:
@@ -581,9 +511,9 @@ class AnnotationTool:
                 key = cv2.waitKey(1) & 0xff
                 if key == ord("y") or key == ord("z"):
                     # creating ground truth data from bounding_boxes array
-                    groundTruthData = self._createGroundTruth(self.bounding_boxes)
+                    groundTruthData = self.parser.createAnnotations(self.bounding_boxes)
                     # saving file on drive
-                    self._saveGroundTruthToFile(self.GT_PATH, groundTruthData)
+                    self.parser.saveDataToFile(self.GT_PATH, groundTruthData)
                     print("File groundtruth.txt has been successfully created with total " + str(len(self.bounding_boxes)) + " annotated frames.")
                     break
                 elif key == ord("n") or key == 27:
@@ -591,11 +521,10 @@ class AnnotationTool:
                     break
         else:
             # creating ground truth data from bounding_boxes array
-            groundTruthData = self._createGroundTruth(self.bounding_boxes)
+            groundTruthData = self.parser.createAnnotations(self.bounding_boxes)
             # saving file on drive
-            self._saveGroundTruthToFile(self.GT_PATH, groundTruthData)
+            self.parser.saveDataToFile(self.GT_PATH, groundTruthData)
             print("File groundtruth.txt has been successfully created with total " + str(len(self.bounding_boxes)) + " annotated frames.")
 
-        # TODO mozna odebrat mouse callback?
         video.release()
         cv2.destroyAllWindows()

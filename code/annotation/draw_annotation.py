@@ -12,9 +12,14 @@ import sys
 import glob
 import os
 
+currentdir = os.path.dirname(os.path.realpath(__file__))
+parentdir = os.path.dirname(currentdir)
+sys.path.insert(0, parentdir)
+
+from code.boundingbox import Parser
+from code.boundingbox import BoundingBox
 # from code.boundingbox.boundingbox import BoundingBox
-# from code.boundingbox import BoundingBox
-from boundingbox.boundingbox import BoundingBox
+# from boundingbox.boundingbox import BoundingBox
 
 
 class DrawAnnotation:
@@ -23,6 +28,9 @@ class DrawAnnotation:
         self.bounding_boxes = []
         # path fo directory in custom dataset
         self.directory_path = directoryPath
+        
+        # enable parsing/creating methods 
+        self.parser = Parser()
 
         # constants for sizes and positions of opencv rectangles and texts
         self.RECTANGLE_BORDER_PX = 3
@@ -32,52 +40,6 @@ class DrawAnnotation:
         self.TEXT_ROW2_POS = (20,60)
 
         self.WINDOW_NAME = "DrawAnnotation"
-
-    # method for parsing ground truth data from given filepath
-    def _parseGivenGroundtruth(self, path, videoWidth):
-        # Read and parse existing groundtruth file
-        if not(os.path.exists(path)):
-            print("Error - Could not read a groundtruth file")
-            sys.exit(-1)
-
-        groundtruthFile = open(path, 'r')
-        lines = groundtruthFile.readlines()
-
-        for line in lines:
-            # split line by comma char
-            line_arr = line.split(',')
-
-            if (line_arr[1] != 'nan' and line_arr[2] != 'nan' and line_arr[3] != 'nan' and line_arr[4] != 'nan'):
-                x1 = int(line_arr[1])
-                y1 = int(line_arr[2])
-                # point 2 could be normalized because of border problem
-                x2 = int(line_arr[1]) + int(line_arr[3])
-                y2 = int(line_arr[2]) + int(line_arr[4])
-                if x2 > videoWidth:
-                    x2 = x2 - videoWidth
-
-                bb = BoundingBox((x1, y1), (x2, y2), videoWidth)
-                bb.is_annotated = True
-                # save bounding box to bb list
-                self.bounding_boxes.append(bb)
-            else:
-                bb = BoundingBox(None, None, videoWidth)
-                bb.is_annotated = False
-                # save unannotated bounding box to bb list
-                self.bounding_boxes.append(bb)
-
-
-    # method for creating string representation of annotated bounding box
-    def _bbString(self, bb):
-        groundTruthFrame = ""
-        if bb and bb.is_annotated:
-            groundTruthFrame += str(bb.get_x1()) + ","
-            groundTruthFrame += str(bb.get_y1()) + ","
-            groundTruthFrame += str(bb.get_width()) + ","
-            groundTruthFrame += str(bb.get_height())
-        else:
-            groundTruthFrame += "nan,nan,nan,nan"
-        return groundTruthFrame
 
 
     # method for processing and showing annotated video frames sequence
@@ -106,14 +68,17 @@ class DrawAnnotation:
 
         # Save video with bounding box feature - define the codec and create VideoWriter object
         fps = video.get(cv2.CAP_PROP_FPS)
+
+        # saving videos with drawed annotation feature
         # fourcc = cv2.VideoWriter_fourcc(*'XVID')
         # output_video = cv2.VideoWriter(VIDEO_RENDERED_PATH, fourcc, fps, (videoWidth, videoHeight))
         # output_video = cv2.VideoWriter(VIDEO_RENDERED_PATH, fourcc, fps, (1440, 720))
         # output_video = cv2.VideoWriter(VIDEO_RENDERED_PATH, fourcc, fps, (1280, 720))
         # output_video = cv2.VideoWriter(VIDEO_RENDERED_PATH, fourcc, fps, (2880, 1440))
+        # output_video = cv2.VideoWriter(VIDEO_RENDERED_PATH, fourcc, fps, (1920, 960))
         
         # parse given groundtruth file
-        self._parseGivenGroundtruth(GT_PATH, videoWidth)
+        self.bounding_boxes = self.parser.parseGivenDataFile(GT_PATH, videoWidth)
 
         # resize window (lets define max width is 1600px)
         if videoWidth < 1600:
@@ -131,7 +96,7 @@ class DrawAnnotation:
             scaleFactor = videoWidth / 1600
             self.RECTANGLE_BORDER_PX = int(self.RECTANGLE_BORDER_PX * scaleFactor)
             self.FONT_SCALE = self.FONT_SCALE * scaleFactor
-            self.FONT_WEIGHT = int(self.FONT_WEIGHT * scaleFactor) + 1
+            self.FONT_WEIGHT = int(self.FONT_WEIGHT * scaleFactor)
             self.TEXT_ROW1_POS = (int(self.TEXT_ROW1_POS[0] * scaleFactor), int(self.TEXT_ROW1_POS[1] * scaleFactor))
             self.TEXT_ROW2_POS = (int(self.TEXT_ROW2_POS[0] * scaleFactor), int(self.TEXT_ROW2_POS[1] * scaleFactor))
         
@@ -190,13 +155,14 @@ class DrawAnnotation:
 
             # display (annotated) frame
             cv2.putText(frame, "Frame #" + str(currentFrame), self.TEXT_ROW1_POS, cv2.FONT_HERSHEY_SIMPLEX, self.FONT_SCALE, (250, 250, 0), self.FONT_WEIGHT)
-            cv2.putText(frame, "Groundtruth : " + self._bbString(bb), self.TEXT_ROW2_POS, cv2.FONT_HERSHEY_SIMPLEX, self.FONT_SCALE, (0, 250, 0), self.FONT_WEIGHT)
+            cv2.putText(frame, "Bounding box : " + self.parser.bboxString(bb), self.TEXT_ROW2_POS, cv2.FONT_HERSHEY_SIMPLEX, self.FONT_SCALE, (0, 250, 0), self.FONT_WEIGHT)
             cv2.imshow(self.WINDOW_NAME, frame)
             
             # Save video with bounding box feature
             # output_video.write(cv2.resize(frame, (1280,720)))
             # output_video.write(cv2.resize(frame, (1440,720))) 
-            # output_video.write(cv2.resize(frame, (2880,1440))) 
+            # output_video.write(cv2.resize(frame, (2880,1440)))
+            # output_video.write(cv2.resize(frame, (1920,960))) 
             
             # Exit if ESC or Q pressed
             k = cv2.waitKey(interval) & 0xff
@@ -227,7 +193,7 @@ class DrawAnnotation:
             videoWidth = width
             videoHeight = height
             # parse given groundtruth file
-            self._parseGivenGroundtruth(GT_PATH, videoWidth)
+            self.bounding_boxes = self.parser.parseGivenDataFile(GT_PATH, videoWidth)
         else:
             print("Error - No images to show.")
             sys.exit(-1)
@@ -275,7 +241,7 @@ class DrawAnnotation:
         
         # show first frame
         cv2.putText(images[currentFrame - 1], "Frame #" + str(currentFrame) + " - Press 'Enter' or 'C' for next frame", self.TEXT_ROW1_POS, cv2.FONT_HERSHEY_SIMPLEX, self.FONT_SCALE, (250, 250, 0), self.FONT_WEIGHT)
-        cv2.putText(images[currentFrame - 1], "Groundtruth : " + self._bbString(bb), self.TEXT_ROW2_POS, cv2.FONT_HERSHEY_SIMPLEX, self.FONT_SCALE, (0, 250, 0), self.FONT_WEIGHT)
+        cv2.putText(images[currentFrame - 1], "Bounding box : " + self.parser.bboxString(bb), self.TEXT_ROW2_POS, cv2.FONT_HERSHEY_SIMPLEX, self.FONT_SCALE, (0, 250, 0), self.FONT_WEIGHT)
         cv2.imshow(self.WINDOW_NAME, images[currentFrame - 1])
 
         # prints just basic guide and info
@@ -318,7 +284,7 @@ class DrawAnnotation:
                 
                 # show frame      
                 cv2.putText(images[currentFrame - 1], "Frame #" + str(currentFrame) + " - Press 'Enter' or 'C' for next frame", self.TEXT_ROW1_POS, cv2.FONT_HERSHEY_SIMPLEX, self.FONT_SCALE, (250, 250, 0), self.FONT_WEIGHT)
-                cv2.putText(images[currentFrame - 1], "Groundtruth : " + self._bbString(bb), self.TEXT_ROW2_POS, cv2.FONT_HERSHEY_SIMPLEX, self.FONT_SCALE, (0, 250, 0), self.FONT_WEIGHT)
+                cv2.putText(images[currentFrame - 1], "Bounding box : " + self.parser.bboxString(bb), self.TEXT_ROW2_POS, cv2.FONT_HERSHEY_SIMPLEX, self.FONT_SCALE, (0, 250, 0), self.FONT_WEIGHT)
                 cv2.imshow(self.WINDOW_NAME, images[currentFrame - 1])
             # exit on 'ESC' or 'q' key
             elif key == 27  or key == ord('q'): 

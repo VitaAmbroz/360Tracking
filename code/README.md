@@ -36,10 +36,13 @@ python run_draw_annotation.py -dir annotation/dataset/03 -img
 python run_evaluation.py -demo
 
 # run evaluation for given video, groundtruth and result data
-python run_evaluation.py -video annotation/dataset/03/03.mp4 -gt annotation/dataset/03/groundtruth.txt -result annotation/results/CSRT/03-result-borders.txt
+python run_evaluation.py -video annotation/dataset/03/03.mp4 -gt annotation/dataset/03/groundtruth.txt -result annotation/results/CSRT/03/03-result-border.txt
 
-# run evaluation for given images sequence directory, groundtruth and result data
-python run_evaluation.py -img annotation/dataset/03/img/ -gt annotation/dataset/03/groundtruth.txt -result annotation/results/CSRT/03-result-borders.txt
+# run drawing of evaluation for given video, groundtruth and result data
+python run_evaluation.py -video annotation/dataset/03/03.mp4 -gt annotation/dataset/03/groundtruth.txt -result annotation/results/CSRT/03/03-result-border.txt
+
+# run drawing of evaluation for given images sequence directory, groundtruth and result data
+python run_evaluation.py -img annotation/dataset/03/img/ -gt annotation/dataset/03/groundtruth.txt -result annotation/results/CSRT/03/03-result-border.txt
 ```
 
 
@@ -55,6 +58,13 @@ python run_opencv_tracking.py -t CSRT -v annotation/dataset/01/01.mp4 -gt annota
 
 python run_opencv_tracking.py -t CSRT -v annotation/dataset/01/01.mp4 -gt annotation/dataset/01/groundtruth.txt -center
 
+python run_opencv_tracking.py -t CSRT -v annotation/dataset/01/01.mp4 -gt annotation/dataset/01/groundtruth.txt -r annotation/results/CSRT/01-result-default.txt
+
+python run_opencv_tracking.py -t CSRT -v annotation/dataset/01/01.mp4 -gt annotation/dataset/01/groundtruth.txt -r annotation/results/CSRT/01-result-border.txt -border
+
+python run_opencv_tracking.py -t CSRT -v annotation/dataset/01/01.mp4 -gt annotation/dataset/01/groundtruth.txt -r annotation/results/CSRT/01-result-rect.txt -rect
+
+python run_opencv_tracking.py -t CSRT -v annotation/dataset/01/01.mp4 -gt annotation/dataset/01/groundtruth.txt -r annotation/results/CSRT/01-result-center.txt -center
 
 python pytracking/pytracking/run_video_default.py atom default annotation/dataset/01/01.mp4 -gt annotation/dataset/01/groundtruth.txt
 

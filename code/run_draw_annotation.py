@@ -11,9 +11,13 @@ import argparse
 import os
 import sys
 
-# from code.annotation import DrawAnnotation
+currentdir = os.path.dirname(os.path.realpath(__file__))
+parentdir = os.path.dirname(currentdir)
+sys.path.insert(0, parentdir)
+
+from code.annotation import DrawAnnotation
 # from code.annotation.draw_annotation import DrawAnnotation
-from annotation.draw_annotation import DrawAnnotation
+# from annotation.draw_annotation import DrawAnnotation
 
 ###############################################################
 ###############            MAIN              ##################
