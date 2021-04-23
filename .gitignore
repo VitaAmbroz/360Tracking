@@ -2,14 +2,14 @@
 /code/__pycache__
 /code/annotation/__pycache__
 /code/boundingbox/__pycache__
+/code/opencv_tracking/__pycache__
+/code/nfov/__pycache__
 
 # dataset
-/code/annotation/dataset/*
+/code/annotation/dataset
 
 # tracking
-/code/opencv_tracking/__pycache__
 /code/opencv_tracking/img-translation.py
-/code/opencv_tracking/nfov.py
 /code/opencv_tracking/opencv-trackers-border.py
 /code/opencv_tracking/opencv-trackers-rect.py
 /code/opencv_tracking/opencv-trackers.py
