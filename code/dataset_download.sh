@@ -1,6 +1,10 @@
 #!/bin/sh
 
-echo "*********** Dataset with videos ***************"
-gdown https://drive.google.com/file/d/19mwqrk45cTo2k72gpQDlQa2uCDaT3FM-/view?usp=sharing -O dataset.zip
+echo "******* Installing gdown... *******"
+pip install gdown
 
-# TODO add unzip to code folder
+echo "******* Downloading dataset... *******"
+gdown https://drive.google.com/u/0/uc\?id\=1ktaXGqRrSJpZ8DvSgF1-ZTAj_KBP9wHG -O annotation/dataset.zip
+
+echo "******* Unziping dataset folder... *******"
+unzip annotation/dataset.zip -d annotation/

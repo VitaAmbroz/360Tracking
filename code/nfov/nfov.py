@@ -114,10 +114,10 @@ class NFOV():
         if computeRectPoints and len(self.sphericalCoord):
             # compute 2 given points in new rectilinear/normal field of view 
             indexPt1 = self._closest_point2(self.point1_equi, self.sphericalCoord)
-            self.point1_rect = [int(indexPt1 % self.width), round(indexPt1 / self.width)]
+            self.point1_rect = [int(indexPt1 % self.width), int(round(indexPt1 / self.width))]
 
             indexPt2 = self._closest_point2(self.point2_equi, self.sphericalCoord)
-            self.point2_rect = [int(indexPt2 % self.width), round(indexPt2 / self.width)]
+            self.point2_rect = [int(indexPt2 % self.width), int(round(indexPt2 / self.width))]
 
         # reshape to self.height arrays - each contains self.width arrays - each contains 2D arrays(points)
         self.sphericalCoordReshaped = self.sphericalCoord.reshape(self.height, self.width, 2).astype(np.float32) % 1
@@ -127,6 +127,20 @@ class NFOV():
         return out
 
     
+    # check if given point is in interval [0,self.width] and [0,self.height]
+    def _checkBoundsOfPoint(self, point):
+        if point[0] < 0: 
+            point[0] = 0
+        elif point[0] > self.width - 1: 
+            point[0] = self.width - 1
+        
+        if point[1] < 0: 
+            point[1] = 0
+        elif point[1] > self.height - 1:
+            point[1] = self.height - 1
+
+        return point
+
     def computeEquirectangularBbox(self, bbox_width: int, bbox_height: int):
         if len(self.sphericalCoord) and self.point1_rect and self.point2_rect:
             # get 4 centers of bounding box rectangle
@@ -134,6 +148,12 @@ class NFOV():
             top_center_point = [round(self.point1_rect[0] + bbox_width/2), self.point1_rect[1]]
             right_center_point = [self.point2_rect[0], round(self.point1_rect[1] + bbox_height/2)]
             bottom_center_point = [round(self.point1_rect[0] + bbox_width/2), self.point2_rect[1]]
+
+            # some tracker could predict point out of image width/height (caucht in experiments)
+            left_center_point = self._checkBoundsOfPoint(left_center_point)
+            top_center_point = self._checkBoundsOfPoint(top_center_point)
+            right_center_point = self._checkBoundsOfPoint(right_center_point)
+            bottom_center_point = self._checkBoundsOfPoint(bottom_center_point)
 
             # get spherical coordinates of 4 centers
             left_center_equi = self.sphericalCoord[left_center_point[1]*self.width + left_center_point[0]]

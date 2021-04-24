@@ -48,7 +48,7 @@ class OpenCVTracking:
         self.parser = Parser()
 
         # constants for sizes and positions of opencv circles, rectangles and texts
-        self.RECTANGLE_BORDER_PX = 2
+        self.RECTANGLE_BORDER_PX = 3
         self.FONT_SCALE = 0.75
         self.FONT_WEIGHT = 1
         self.TEXT_ROW1_POS = (30,30)
@@ -331,13 +331,13 @@ class OpenCVTracking:
 
         # empiric constants - setup by experiments
         SHIFT_SLOW_START = int(self.video_width / 5)
-        SHIFT_FAST_START = int(self.video_width / 10)
+        SHIFT_FAST_START = int(self.video_width / 8)
 
         SHIFT_SLOW_STEP_PX = int(self.video_width / 300)
         SHIFT_FAST_STEP_PX = int(self.video_width / 100)
 
-        shiftLeftSlowly = 0
-        shiftRightSlowly = 0
+        shiftLeft = 0
+        shiftRight = 0
         p1 = (int(self.bbox[0]), int(self.bbox[1]))
         p2 = (int(self.bbox[0] + self.bbox[2]), int(self.bbox[1] + self.bbox[3]))
         
@@ -354,40 +354,67 @@ class OpenCVTracking:
             if p1 and p2:
                 # empiric constant for slow/smooth transitioning = 1/5 of videoWidth is supposed to be good to start handle border translation
                 if p1[0] < SHIFT_SLOW_START:
-                    shiftLeftSlowly += SHIFT_SLOW_STEP_PX
-                    shiftLeftSlowly = shiftLeftSlowly % self.video_width
+                    # check if there has been any previous shiftRight
+                    if shiftRight > 1:
+                        shiftRight -= SHIFT_SLOW_STEP_PX
+                        if shiftRight < 0:
+                            shiftRight = 0
+                        shiftRight = shiftRight % self.video_width
+                    else:
+                        shiftLeft += SHIFT_SLOW_STEP_PX
+                        shiftLeft = shiftLeft % self.video_width
                 elif p2[0] > self.video_width - SHIFT_SLOW_START:
-                    shiftRightSlowly += SHIFT_SLOW_STEP_PX
-                    shiftRightSlowly = shiftRightSlowly % self.video_width
+                    # check if there has been any previous shiftLeft
+                    if shiftLeft > 1:
+                        shiftLeft -= SHIFT_SLOW_STEP_PX
+                        if shiftLeft < 0:
+                            shiftLeft = 0
+                        shiftLeft = shiftLeft % self.video_width
+                    else:
+                        shiftRight += SHIFT_SLOW_STEP_PX
+                        shiftRight = shiftRight % self.video_width
 
-                # empiric constant for faster transitioning = 1/10 of videoWidth is supposed to be good to start faster transition
-                if p1[0] < SHIFT_FAST_START:
-                    shiftLeftSlowly += SHIFT_FAST_STEP_PX
-                    shiftLeftSlowly = shiftLeftSlowly % self.video_width
+                # empiric constant for faster transitioning = 1/8 of videoWidth is supposed to be good to start faster transition
+                if p1[0] < SHIFT_FAST_START:# check if there has been any previous shiftRight
+                    if shiftRight > 1:
+                        shiftRight -= SHIFT_FAST_STEP_PX
+                        if shiftRight < 0:
+                            shiftRight = 0
+                        shiftRight = shiftRight % self.video_width
+                    else:
+                        shiftLeft += SHIFT_FAST_STEP_PX
+                        shiftLeft = shiftLeft % self.video_width
                 elif p2[0] > self.video_width - SHIFT_FAST_START:
-                    shiftRightSlowly += SHIFT_FAST_STEP_PX
-                    shiftRightSlowly = shiftRightSlowly % self.video_width
+                    # check if there has been any previous shiftLeft
+                    if shiftLeft > 1:
+                        shiftLeft -= SHIFT_FAST_STEP_PX
+                        if shiftLeft < 0:
+                            shiftLeft = 0
+                        shiftLeft = shiftLeft % self.video_width
+                    else:
+                        shiftRight += SHIFT_FAST_STEP_PX
+                        shiftRight = shiftRight % self.video_width
                 
-            if shiftLeftSlowly > 0 or shiftRightSlowly > 0:
+            if shiftLeft > 0 or shiftRight > 0:
                 # shape of original frame
                 rows,cols,_ = self.frame.shape
                 dstLeftPart = None
                 dstRightPart = None
 
-                if shiftLeftSlowly > 0:
+                if shiftLeft > 0:
                     # shift to left
-                    M1 = np.float32([[1,0,shiftLeftSlowly-cols], [0,1,0]])
-                    dstLeftPart = cv2.warpAffine(self.frame, M1, (shiftLeftSlowly, rows))
+                    M1 = np.float32([[1,0,shiftLeft-cols], [0,1,0]])
+                    dstLeftPart = cv2.warpAffine(self.frame, M1, (shiftLeft, rows))
 
                     M2 = np.float32([[1,0,0], [0,1,0]])
-                    dstRightPart = cv2.warpAffine(self.frame, M2, (cols-shiftLeftSlowly, rows))
-                elif shiftRightSlowly > 0:
+                    dstRightPart = cv2.warpAffine(self.frame, M2, (cols-shiftLeft, rows))
+                elif shiftRight > 0:
                     # shift to right
-                    M1 = np.float32([[1,0,-shiftRightSlowly], [0,1,0]])
-                    dstLeftPart = cv2.warpAffine(self.frame, M1, (cols-shiftRightSlowly, rows))
+                    M1 = np.float32([[1,0,-shiftRight], [0,1,0]])
+                    dstLeftPart = cv2.warpAffine(self.frame, M1, (cols-shiftRight, rows))
                     
                     M2 = np.float32([[1,0,0], [0,1,0]])
-                    dstRightPart = cv2.warpAffine(self.frame, M2, (shiftRightSlowly, rows))
+                    dstRightPart = cv2.warpAffine(self.frame, M2, (shiftRight, rows))
                     
                 # provide shift
                 frameShifted = np.concatenate((dstLeftPart, dstRightPart), axis=1)
@@ -411,29 +438,29 @@ class OpenCVTracking:
                 # normalize horizontal shifting
                 tmpPoint1 = p1
                 tmpPoint2 = p2
-                if shiftLeftSlowly > 0:
+                if shiftLeft > 0:
                     # normalize horizontal shifting left to original equirectangular frame 
                     x1 = tmpPoint1[0]
-                    x1 -= shiftLeftSlowly
+                    x1 -= shiftLeft
                     if x1 < 0:
                         x1 = ((self.video_width + x1) % self.video_width) - 1
                     tmpPoint1 = (x1, tmpPoint1[1])
 
                     x2 = tmpPoint2[0]
-                    x2 -= shiftLeftSlowly
+                    x2 -= shiftLeft
                     if x2 < 0:
                         x2 = ((self.video_width + x2) % self.video_width) - 1
                     tmpPoint2 = (x2, tmpPoint2[1])
-                elif shiftRightSlowly > 0:
+                elif shiftRight > 0:
                     # normalize horizontal shifting right to original equirectangular frame 
                     x1 = tmpPoint1[0]
-                    x1 += shiftRightSlowly
+                    x1 += shiftRight
                     if x1 > self.video_width:
                         x1 = (x1 % self.video_width) - 1
                     tmpPoint1 = (x1, tmpPoint1[1])
 
                     x2 = tmpPoint2[0]
-                    x2 += shiftRightSlowly
+                    x2 += shiftRight
                     if x2 > self.video_width:
                         x2 = (x2 % self.video_width) - 1
                     tmpPoint2 = (x2, tmpPoint2[1])
@@ -499,7 +526,7 @@ class OpenCVTracking:
 
 
     # method for start opencv tracking with improvement of mapping equirectangular to rectilinear projection
-    def startTrackingRectilinear(self):
+    def startTrackingNFOV(self):
         # prints just basic guide and info
         print("--------------------------------------------------------------------")
         print("OpenCV tracking process with rectilinear improvement has started...")
@@ -507,6 +534,7 @@ class OpenCVTracking:
         print("Frame #1 : " + str(self.bbox))
         print("Press 'Esc' or 'Q' key to exit")
         print("--------------------------------------------------------------------")
+
 
         ##########################################################################
         ################## Normal field of view initialization ###################
@@ -521,7 +549,7 @@ class OpenCVTracking:
             nfov_height = 720
             nfov_width = round(whRatio * 720)
 
-        # TODO resize for 4K, maybe also for fullHD 
+        # create instance of NFOV
         nfov = NFOV(nfov_height, nfov_width)
 
         # center point of selected bounding box
@@ -545,10 +573,10 @@ class OpenCVTracking:
         frameRectilinear = nfov.toNFOV(self.frame, center_point, computeRectPoints=True)
 
         # get coordinates of points in rectilinear projection
-        x1_rect = nfov.point1_rect[0]
-        y1_rect = nfov.point1_rect[1]
-        width_rect = nfov.point2_rect[0] - nfov.point1_rect[0]
-        height_rect = nfov.point2_rect[1] - nfov.point1_rect[1]
+        x1_rect = int(nfov.point1_rect[0])
+        y1_rect = int(nfov.point1_rect[1])
+        width_rect = int(nfov.point2_rect[0] - nfov.point1_rect[0])
+        height_rect = int(nfov.point2_rect[1] - nfov.point1_rect[1])
 
 
         ##########################################################################
@@ -587,7 +615,7 @@ class OpenCVTracking:
         # counter for frames
         self.current_frame = 1
 
-        cv2.waitKey(0)
+        # cv2.waitKey(0)
 
         # empiric constants for shifting/scaling in rectilinear projection - setup by experiments
         SHIFT_SLOW_X_START = 0.45 * nfov_width
@@ -606,6 +634,9 @@ class OpenCVTracking:
 
         SCALEDOWN_FOV_FAST_START_X = 0.8 * nfov_width
         SCALEDOWN_FOV_FAST_START_Y = 0.8 * nfov_height
+
+        SCALEUP_FOV_SLOW_START_X = 0.25 * nfov_width
+        SCALEUP_FOV_SLOW_START_Y = 0.25 * nfov_height
         
         SCALE_FOV_STEP_SLOW = 0.01
         SCALE_FOV_STEP_FAST = 0.02
@@ -672,7 +703,7 @@ class OpenCVTracking:
                     center_equi_y = center_equi_y % self.video_height
 
 
-                # rescale FOV - enable only zoom down (further from object)
+                # rescale FOV - enable zoom back (further from object)
                 # object is close to camera/big -> increase field of view
                 # FAST
                 if bbox_rect[2] > SCALEDOWN_FOV_FAST_START_X or bbox_rect[3] > SCALEDOWN_FOV_FAST_START_Y:
@@ -682,14 +713,12 @@ class OpenCVTracking:
                 elif bbox_rect[2] > SCALEDOWN_FOV_SLOW_START_X or bbox_rect[3] > SCALEDOWN_FOV_SLOW_START_Y:
                     if nfov.FOV[0] < 0.9:
                         nfov.FOV = [nfov.FOV[0] + SCALE_FOV_STEP_SLOW, nfov.FOV[1] + SCALE_FOV_STEP_SLOW]
-                    
-                # disabled + zoom
-                # elif bbox_rect[2] < SCALEDOWN_FOV_FAST_START_X and bbox_rect[3] < SCALEDOWN_FOV_FAST_START_Y:
-                #     # object is small -> decrease field of view
-                #     nfov.FOV = [nfov.FOV[0] - SCALE_FOV_STEP_FAST, nfov.FOV[1] - SCALE_FOV_STEP_FAST]
-                # elif bbox_rect[2] < SCALEDOWN_FOV_SLOW_START_X and bbox_rect[3] < SCALEDOWN_FOV_SLOW_START_Y:
-                #     # object is small -> decrease field of view
-                #     nfov.FOV = [nfov.FOV[0] - SCALE_FOV_STEP_SLOW, nfov.FOV[1] - SCALE_FOV_STEP_SLOW]
+                # rescale FOV - enable zoom forward (closer from object)
+                elif bbox_rect[2] < SCALEDOWN_FOV_SLOW_START_X and bbox_rect[3] < SCALEDOWN_FOV_SLOW_START_Y:
+                    # object is small and field of view is large 
+                    if nfov.FOV[0] > 0.6:
+                        # decrease field of view
+                        nfov.FOV = [nfov.FOV[0] - SCALE_FOV_STEP_SLOW, nfov.FOV[1] - SCALE_FOV_STEP_SLOW]
 
             # normalize center point in [0,1]
             center_equi_x_normalized = center_equi_x / self.video_width
@@ -709,8 +738,8 @@ class OpenCVTracking:
             # handle tracking result
             if ok:
                 # rectilinear
-                p1_rect = (round(bbox_rect[0]), round(bbox_rect[1]))
-                p2_rect = (round(bbox_rect[0] + bbox_rect[2]), round(bbox_rect[1] + bbox_rect[3]))
+                p1_rect = (int(round(bbox_rect[0])), int(round(bbox_rect[1])))
+                p2_rect = (int(round(bbox_rect[0] + bbox_rect[2])), int(round(bbox_rect[1] + bbox_rect[3])))
                 # store points to nfov instance
                 nfov.point1_rect = [p1_rect[0], p1_rect[1]]
                 nfov.point2_rect = [p2_rect[0], p2_rect[1]]
@@ -721,8 +750,8 @@ class OpenCVTracking:
                 # compute corresponding points of rectilinear bounding box in equirectangular projection 
                 nfov.computeEquirectangularBbox(bbox_width=round(bbox_rect[2]), bbox_height=round(bbox_rect[3]))
                 # bbox points top left and right bottom in equirectangular projection
-                p1_equi = (round(nfov.point1_equi[0] * self.video_width), round(nfov.point1_equi[1] * self.video_height))
-                p2_equi = (round(nfov.point2_equi[0] * self.video_width), round(nfov.point2_equi[1] * self.video_height))
+                p1_equi = (int(round(nfov.point1_equi[0] * self.video_width)), int(round(nfov.point1_equi[1] * self.video_height)))
+                p2_equi = (int(round(nfov.point2_equi[0] * self.video_width)), int(round(nfov.point2_equi[1] * self.video_height)))
 
                 # create custom equirectangular bounding box instance
                 bb = BoundingBox(p1_equi, p2_equi, self.video_width)
@@ -771,6 +800,10 @@ class OpenCVTracking:
             # Exit if 'Esc' or 'q' key is pressed
             if k == 27 or k == ord("q"): 
                 break
+        
+
+        # always save tracker result
+        self.saveResults()
         
         # release, destroy
         self.video.release()

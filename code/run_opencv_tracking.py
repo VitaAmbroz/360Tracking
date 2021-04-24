@@ -29,7 +29,7 @@ if __name__ == '__main__':
     ap.add_argument("-gt", "--groundtruth", required=False, help="Path to the file with groundtruth data (Used to get bounding box on first frame)")
     ap.add_argument("-r", "--result", required=False, help="Path to the new file when results will be stored")
     ap.add_argument("-border", "--border", action='store_true', help="Flag for running improvement of object crossing left/right border in equirectangular frames")
-    ap.add_argument("-rect", "--rect", action='store_true', help="Flag for running improvement to track in rectilinear frames")
+    ap.add_argument("-nfov", "--nfov", action='store_true', help="Flag for running improvement to track in rectilinear frames (normal field of view)")
     ap.add_argument("-center", "--center", action='store_true', help="Flag for running improvement of object centering in equirectangular projection")
     args = vars(ap.parse_args())
 
@@ -38,8 +38,8 @@ if __name__ == '__main__':
     tracking.initLoad()
     if args["border"]:
         tracking.startTrackingBorder()
-    elif args["rect"]:
-        tracking.startTrackingRectilinear()
+    elif args["nfov"]:
+        tracking.startTrackingNFOV()
     elif args["center"]:
         tracking.startTrackingCentering()
     else:
