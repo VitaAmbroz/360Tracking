@@ -30,7 +30,6 @@ if __name__ == '__main__':
     ap.add_argument("-r", "--result", required=False, help="Path to the new file when results will be stored")
     ap.add_argument("-border", "--border", action='store_true', help="Flag for running improvement of object crossing left/right border in equirectangular frames")
     ap.add_argument("-nfov", "--nfov", action='store_true', help="Flag for running improvement to track in rectilinear frames (normal field of view)")
-    ap.add_argument("-center", "--center", action='store_true', help="Flag for running improvement of object centering in equirectangular projection")
     args = vars(ap.parse_args())
 
     # create instance for evaluation
@@ -40,7 +39,5 @@ if __name__ == '__main__':
         tracking.startTrackingBorder()
     elif args["nfov"]:
         tracking.startTrackingNFOV()
-    elif args["center"]:
-        tracking.startTrackingCentering()
     else:
         tracking.startTrackingDefault()

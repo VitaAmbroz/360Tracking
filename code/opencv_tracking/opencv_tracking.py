@@ -42,7 +42,6 @@ class OpenCVTracking:
         self.bbox = None
         self.gt_bounding_boxes = []
         self.result_bounding_boxes = []
-        self.current_frame = 1
 
         # enable parsing/creating methods 
         self.parser = Parser()
@@ -78,6 +77,45 @@ class OpenCVTracking:
             cv2.rectangle(self.frame, point1, point2, color, thickness)
 
 
+    # check if given point is in interval [0,self.width] and [0,self.height]
+    def _checkBoundsOfPoint(self, point):
+        # horizontal could overflow in equirectangular
+        x = point[0]
+        y = point[1]
+        if x < 0: 
+            x = self.video_width + x - 1
+        elif x > self.video_width - 1: 
+            x = x - self.video_width - 1
+        
+        # vertical
+        if y < 0: 
+            y = 0
+        elif y > self.video_height - 1:
+            y = self.video_height - 1
+
+        point = (x,y)
+        return point
+
+    # check if given point is in interval [0,self.width] and [0,self.height]
+    def _checkBoundsOfPointStrict(self, point):
+        # no horizontal overflow
+        x = point[0]
+        y = point[1]
+        if x < 0: 
+            x = 0
+        elif x > self.video_width - 1: 
+            x = self.video_width - 1
+        
+        # vertical
+        if y < 0: 
+            y = 0
+        elif y > self.video_height - 1:
+            y = self.video_height - 1
+
+        point = (x,y)
+        return point
+
+
     # method for loading video and groundtruth data, init tracker (the same start for all modifiations)
     def initLoad(self):
         ########## 1) Video Checking ##########
@@ -87,13 +125,13 @@ class OpenCVTracking:
         if not self.video.isOpened():
             print("Could not open video")
             print(help)
-            sys.exit()
+            sys.exit(-1)
 
         # Read first frame.
         ok, self.frame = self.video.read()
         if not ok:
             print("Error - Could not read a video file")
-            sys.exit()
+            sys.exit(-1)
 
         # save video width/height to global variables
         self.video_width = int(self.video.get(cv2.CAP_PROP_FRAME_WIDTH))
@@ -104,7 +142,7 @@ class OpenCVTracking:
         if not(self.tracker_name in self.TRACKER_TYPES):
             print("Invalid tracker name: '" + self.tracker_name + "'")
             print("Supported tracker names: BOOSTING, MIL, KCF, TLD, MEDIANFLOW, GOTURN, MOSSE, CSRT")
-            sys.exit()
+            sys.exit(-1)
 
         # Set up tracker
         if self.tracker_name == 'BOOSTING':
@@ -128,9 +166,10 @@ class OpenCVTracking:
         ########## 3) Initialation of bounding box ##########
         # Set up initial bounding box
         self.bbox = None
+        self.gt_bounding_boxes = []
+        self.result_bounding_boxes = []
         if self.groundtruth_path:
             # use first bounding box from given groundtruth
-            self.boundingBoxes = []
             self.gt_bounding_boxes = self.parser.parseGivenDataFile(self.groundtruth_path, self.video_width)
             
             if len(self.gt_bounding_boxes) > 0:
@@ -140,7 +179,7 @@ class OpenCVTracking:
                     self.result_bounding_boxes.append(bb1)
                 else:
                     print("Error - Invalid first frame annotation from file: '" + self.groundtruth_path + "'")
-                    sys.exit()
+                    sys.exit(-1)
         else:
             # TODO resize select ROI?
             # using opencv select ROI
@@ -156,7 +195,7 @@ class OpenCVTracking:
 
         if not(self.bbox) or self.bbox == (0,0,0,0):
             print("Error - Invalid first frame annotation")
-            sys.exit()
+            sys.exit(-1)
         
         ########## 4) Setup opencv window ##########
         # resize window (lets define max width is 1600px)
@@ -183,7 +222,7 @@ class OpenCVTracking:
 
 
     # method for saving result bounding boxes to txt file
-    def saveResults(self):
+    def _saveResults(self):
         # creating string result data
         resultData = self.parser.createAnnotations(self.result_bounding_boxes)
         # saving file on drive
@@ -213,16 +252,11 @@ class OpenCVTracking:
         # calculate the interval between frame
         interval = int(1000/videoFPS) 
 
-        # counter for frames
-        self.current_frame = 1
-
         while True:
             # Read a new frame
             ok, self.frame = self.video.read()
             if not ok:
                 break
-            # increment counter
-            self.current_frame += 1
 
             # Start timer
             timer = cv2.getTickCount()
@@ -238,15 +272,17 @@ class OpenCVTracking:
                 # Tracking success
                 p1 = (int(self.bbox[0]), int(self.bbox[1]))
                 p2 = (int(self.bbox[0] + self.bbox[2]), int(self.bbox[1] + self.bbox[3]))
-                cv2.rectangle(self.frame, p1, p2, (255,0,0), self.RECTANGLE_BORDER_PX, 1)
+
+                p1 = self._checkBoundsOfPoint(p1)
+                p2 = self._checkBoundsOfPoint(p2)
 
                 # new instance of bounding box
                 bb = BoundingBox(p1, p2, self.video_width)
                 bb.is_annotated = True
                 self.result_bounding_boxes.append(bb)
-                
-                # dbgPrint = self.parser.createResultFrame(self.current_frame, bb)
-                # print("Frame #" + str(self.current_frame) + " : " + dbgPrint[:-1])
+
+                # draw bounding box to original frame
+                self._drawBoundingBox(self.video_width, p1, p2, bb, (0, 255, 0), self.RECTANGLE_BORDER_PX)
             else:
                 # Tracking failure
                 cv2.putText(self.frame, "Tracking failure detected", self.TEXT_ROW4_POS, cv2.FONT_HERSHEY_SIMPLEX, self.FONT_SCALE, (0, 0, 255), self.FONT_WEIGHT)
@@ -255,9 +291,6 @@ class OpenCVTracking:
                 bb = BoundingBox(None, None, self.video_width)
                 bb.is_annotated = False
                 self.result_bounding_boxes.append(bb)
-
-                # dbgPrint = self._createResultFrame(self.current_frame, bb)
-                # print("Frame #" + str(self.current_frame) + " : " + dbgPrint[:-1])
 
             # Display tracker type on frame
             cv2.putText(self.frame, self.tracker_name + " Tracker", self.TEXT_ROW1_POS, cv2.FONT_HERSHEY_SIMPLEX, self.FONT_SCALE, (0, 200, 250), self.FONT_WEIGHT)
@@ -283,7 +316,7 @@ class OpenCVTracking:
                 break
         
         # always save tracker result
-        self.saveResults()
+        self._saveResults()
 
         self.video.release()
         cv2.destroyAllWindows()
@@ -326,9 +359,6 @@ class OpenCVTracking:
         # calculate the interval between frame
         interval = int(1000/videoFPS) 
 
-        # counter for frames
-        self.current_frame = 1
-
         # empiric constants - setup by experiments
         SHIFT_SLOW_START = int(self.video_width / 5)
         SHIFT_FAST_START = int(self.video_width / 8)
@@ -346,8 +376,6 @@ class OpenCVTracking:
             ok, self.frame = self.video.read()
             if not ok:
                 break
-            # increment counter
-            self.current_frame += 1
             # save reference
             frameShifted = self.frame
 
@@ -433,6 +461,9 @@ class OpenCVTracking:
                 # Tracking success
                 p1 = (int(self.bbox[0]), int(self.bbox[1]))
                 p2 = (int(self.bbox[0] + self.bbox[2]), int(self.bbox[1] + self.bbox[3]))
+
+                p1 = self._checkBoundsOfPointStrict(p1)
+                p2 = self._checkBoundsOfPointStrict(p2)
                 cv2.rectangle(frameShifted, p1, p2, (255, 255, 0), self.RECTANGLE_BORDER_PX, 1)
 
                 # normalize horizontal shifting
@@ -470,12 +501,8 @@ class OpenCVTracking:
                 bb.is_annotated = True
                 self.result_bounding_boxes.append(bb)
 
-                # draw bounding box to original fram
+                # draw bounding box to original frame
                 self._drawBoundingBox(self.video_width, tmpPoint1, tmpPoint2, bb, (0, 255, 0), self.RECTANGLE_BORDER_PX)
-                
-                # debug print
-                # dbgPrint = self._createResultFrame(self.current_frame, bb)
-                # print("Frame #" + str(self.current_frame) + " : " + dbgPrint[:-1])
             else:
                 # Tracking failure
                 cv2.putText(self.frame, "Tracking failure detected", self.TEXT_ROW4_POS, cv2.FONT_HERSHEY_SIMPLEX, self.FONT_SCALE, (0, 0, 255), self.FONT_WEIGHT)
@@ -488,10 +515,6 @@ class OpenCVTracking:
                 bb = BoundingBox(None, None, self.video_width)
                 bb.is_annotated = False
                 self.result_bounding_boxes.append(bb)
-
-                # debug print
-                # dbgPrint = self._createResultFrame(self.current_frame, bb)
-                # print("Frame #" + str(self.current_frame) + " : " + dbgPrint[:-1])
 
             # Display tracker type on frame
             cv2.putText(self.frame, self.tracker_name + " Tracker", self.TEXT_ROW1_POS, cv2.FONT_HERSHEY_SIMPLEX, self.FONT_SCALE, (0, 255, 0), self.FONT_WEIGHT)
@@ -519,7 +542,7 @@ class OpenCVTracking:
                 break
         
         # always save tracker result
-        self.saveResults()
+        self._saveResults()
 
         self.video.release()
         cv2.destroyAllWindows()
@@ -612,9 +635,6 @@ class OpenCVTracking:
         # calculate the interval between frame
         interval = int(1000/videoFPS) 
 
-        # counter for frames
-        self.current_frame = 1
-
         # cv2.waitKey(0)
 
         # empiric constants for shifting/scaling in rectilinear projection - setup by experiments
@@ -646,8 +666,6 @@ class OpenCVTracking:
             ok, self.frame = self.video.read()
             if not ok:
                 break
-            # increment counter
-            self.current_frame += 1
 
             # Start timer
             timer = cv2.getTickCount()
@@ -803,12 +821,9 @@ class OpenCVTracking:
         
 
         # always save tracker result
-        self.saveResults()
+        self._saveResults()
         
         # release, destroy
         self.video.release()
         cv2.destroyAllWindows()
 
-
-    def startTrackingCentering(self):
-        print("start tracking centering")
