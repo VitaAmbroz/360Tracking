@@ -25,8 +25,8 @@ if __name__ == '__main__':
     # construct the argument parser and parse the arguments
     ap = argparse.ArgumentParser()
     ap.add_argument("-gt", "--groundtruth", required=False, help="Path to the file with groundtruth data")
-    ap.add_argument("-result", "--result", required=False, help="Path to the file with tracking result data")
-    ap.add_argument("-video", "--video", required=False, help="Path to the video")
+    ap.add_argument("-r", "--result", required=False, help="Path to the file with tracking result data")
+    ap.add_argument("-v", "--video", required=False, help="Path to the video")
     ap.add_argument("-img", "--img", required=False, help="Path to images sequence")
     ap.add_argument("-demo", "--demo", action='store_true', help="Path to the dataset-demo directory - annotation/dataset-demo/demo-annotation/.")
     ap.add_argument("-iou", "--iou", action='store_true', help="Flag for computing Intersection over Union")

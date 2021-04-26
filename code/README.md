@@ -35,11 +35,11 @@ python run_draw_annotation.py -dir annotation/dataset/03 -img
 # running demo evaluation - just show groundtruth and result data
 python run_evaluation.py -demo
 
-# run evaluation for given video, groundtruth and result data
-python run_evaluation.py -video annotation/dataset/03/03.mp4 -gt annotation/dataset/03/groundtruth.txt -result annotation/results/CSRT/03/03-result-border.txt
-
 # run drawing of evaluation for given video, groundtruth and result data
 python run_evaluation.py -video annotation/dataset/03/03.mp4 -gt annotation/dataset/03/groundtruth.txt -result annotation/results/CSRT/03/03-result-border.txt
+
+# run computing Intersection over Union metric for given video, groundtruth and result file
+python run_evaluation.py -video annotation/dataset/03/03.mp4 -gt annotation/dataset/03/groundtruth.txt -result annotation/results/CSRT/03/03-result-border.txt -iou
 
 # run drawing of evaluation for given images sequence directory, groundtruth and result data
 python run_evaluation.py -img annotation/dataset/03/img/ -gt annotation/dataset/03/groundtruth.txt -result annotation/results/CSRT/03/03-result-border.txt

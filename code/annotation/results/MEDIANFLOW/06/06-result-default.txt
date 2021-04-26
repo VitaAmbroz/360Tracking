@@ -113,7 +113,7 @@
 113,nan,nan,nan,nan
 114,nan,nan,nan,nan
 115,nan,nan,nan,nan
-116,603,1954,323,268
+116,603,1954,323,205
 117,nan,nan,nan,nan
 118,nan,nan,nan,nan
 119,nan,nan,nan,nan

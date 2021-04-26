@@ -91,15 +91,27 @@ class Evaluation:
     # Intersection over Union is an evaluation metric used to measure the accuracy of an object tracker/detector...
     def computeIntersectionOverUnion(self):
         if len(self.gt_bounding_boxes) == len(self.result_bounding_boxes):
+            iou_string = ""
             # loop in bounding_boxes lists
             for idx in range(len(self.gt_bounding_boxes)):
                 gt_bbox = self.gt_bounding_boxes[idx]
                 result_bbox = self.result_bounding_boxes[idx]
 
                 iou = self.intersectionOverUnion(gt_bbox, result_bbox)
-                print("Frame #" + str(idx+1) + " : " + str(iou))
+                # debug prints
+                # print("Frame #" + str(idx+1) + " : " + str(iou))
+                # store iou results to list
+                iou_string += str(iou) + "\n"
+
+            # saving file on drive
+            saveFilePath = self.result_path.replace(".txt", "-iou.txt")
+            newFile = open(saveFilePath, "w")
+            newFile.write(iou_string)
+            newFile.close()
+            print("File '" + saveFilePath + "' has been created.")
 
 
+    # method for computing IoU metric between 2 given bounding boxes
     # inspired and modified from https://www.pyimagesearch.com/2016/11/07/intersection-over-union-iou-for-object-detection/
     def intersectionOverUnion(self, bboxA: BoundingBox, bboxB: BoundingBox):
         # check if there are coordinates of bounding boxes
@@ -124,6 +136,10 @@ class Evaluation:
             # and dividing it by the sum of result + ground-truth areas - the interesection area
             iou = intersection_area / float(bboxA_area + bboxB_area - intersection_area)
 
+            # possible fix because of previous float rounding - max iou is 1.0
+            if iou > 1.0:
+                iou = 1.0
+            
             # return the intersection over union value
             return iou
         elif not(bboxA.point1) and not(bboxA.point2) and not(bboxB.point1) and not(bboxB.point2):

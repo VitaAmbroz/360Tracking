@@ -29,6 +29,7 @@ import numpy as np
 
 class NFOV():
     def __init__(self, height=400, width=800):
+        # default FOV 90°
         self.FOV = [0.5, 0.5]
         self.PI = pi
         self.PI_2 = pi * 0.5
@@ -82,8 +83,11 @@ class NFOV():
 
         return np.array([lon, lat]).T
 
-    # TODO resource stack overflow
+    ########################### Stackexchange atrtibution ##############################################
     # https://codereview.stackexchange.com/questions/28207/finding-the-closest-point-to-a-list-of-points
+    # Asked by dassouki:    https://codereview.stackexchange.com/users/190/dassouki
+    # Answeerd by jaime:    https://codereview.stackexchange.com/users/20894/jaime
+    # methods for computing the closest point in array of points
     def _closest_point(self, point, points):
         points = np.asarray(points)
         dist_2 = np.sum((points - point)**2, axis=1)
@@ -94,7 +98,7 @@ class NFOV():
         deltas = points - point
         dist_2 = np.einsum('ij,ij->i', deltas, deltas)
         return np.argmin(dist_2)
-
+    ####################################################################################################
 
     def toNFOV(self, frame, center_point, computeRectPoints=False):
         # equirectangular frame

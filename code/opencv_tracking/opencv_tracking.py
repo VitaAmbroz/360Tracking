@@ -655,8 +655,8 @@ class OpenCVTracking:
         SCALEDOWN_FOV_FAST_START_X = 0.8 * nfov_width
         SCALEDOWN_FOV_FAST_START_Y = 0.8 * nfov_height
 
-        SCALEUP_FOV_SLOW_START_X = 0.25 * nfov_width
-        SCALEUP_FOV_SLOW_START_Y = 0.25 * nfov_height
+        SCALEUP_FOV_SLOW_START_X = 0.33 * nfov_width
+        SCALEUP_FOV_SLOW_START_Y = 0.33 * nfov_height
         
         SCALE_FOV_STEP_SLOW = 0.01
         SCALE_FOV_STEP_FAST = 0.02
@@ -721,18 +721,21 @@ class OpenCVTracking:
                     center_equi_y = center_equi_y % self.video_height
 
 
+                # default nfov.FOV is 0.5 == 90°
                 # rescale FOV - enable zoom back (further from object)
                 # object is close to camera/big -> increase field of view
                 # FAST
                 if bbox_rect[2] > SCALEDOWN_FOV_FAST_START_X or bbox_rect[3] > SCALEDOWN_FOV_FAST_START_Y:
-                    if nfov.FOV[0] < 0.9:
+                    # max FOV 0.8 == 144° 
+                    if nfov.FOV[0] < 0.8:
                         nfov.FOV = [nfov.FOV[0] + SCALE_FOV_STEP_FAST, nfov.FOV[1] + SCALE_FOV_STEP_FAST]
                 # SLOW
                 elif bbox_rect[2] > SCALEDOWN_FOV_SLOW_START_X or bbox_rect[3] > SCALEDOWN_FOV_SLOW_START_Y:
-                    if nfov.FOV[0] < 0.9:
+                    # max FOV 0.8 == 144°
+                    if nfov.FOV[0] < 0.8:
                         nfov.FOV = [nfov.FOV[0] + SCALE_FOV_STEP_SLOW, nfov.FOV[1] + SCALE_FOV_STEP_SLOW]
                 # rescale FOV - enable zoom forward (closer from object)
-                elif bbox_rect[2] < SCALEDOWN_FOV_SLOW_START_X and bbox_rect[3] < SCALEDOWN_FOV_SLOW_START_Y:
+                elif bbox_rect[2] < SCALEUP_FOV_SLOW_START_X and bbox_rect[3] < SCALEUP_FOV_SLOW_START_Y:
                     # object is small and field of view is large 
                     if nfov.FOV[0] > 0.6:
                         # decrease field of view
@@ -770,6 +773,10 @@ class OpenCVTracking:
                 # bbox points top left and right bottom in equirectangular projection
                 p1_equi = (int(round(nfov.point1_equi[0] * self.video_width)), int(round(nfov.point1_equi[1] * self.video_height)))
                 p2_equi = (int(round(nfov.point2_equi[0] * self.video_width)), int(round(nfov.point2_equi[1] * self.video_height)))
+
+                # in NFOV points.x could be negative
+                p1_equi = self._checkBoundsOfPoint(p1_equi)
+                p2_equi = self._checkBoundsOfPoint(p2_equi)
 
                 # create custom equirectangular bounding box instance
                 bb = BoundingBox(p1_equi, p2_equi, self.video_width)
