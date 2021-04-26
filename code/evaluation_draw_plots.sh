@@ -1,8 +1,8 @@
 #!/bin/sh
 
-##############################################################################################
-############################### Results CSRT (OpenCV_contrib) ################################
-##############################################################################################
+###########################################
+#### Results CSRT (OpenCV_contrib) ########
+###########################################
 python run_evaluation_plots.py -t CSRT -n 01
 python run_evaluation_plots.py -t CSRT -n 02
 python run_evaluation_plots.py -t CSRT -n 03
@@ -26,9 +26,9 @@ python run_evaluation_plots.py -t CSRT -n 20
 python run_evaluation_plots.py -t CSRT -n 21
 
 
-##############################################################################################
-############################ Results MEDIANFLOW (OpenCV_contrib) #############################
-##############################################################################################
+###########################################
+#### Results MEDIANFLOW (OpenCV_contrib) ##
+###########################################
 python run_evaluation_plots.py -t MEDIANFLOW -n 01
 python run_evaluation_plots.py -t MEDIANFLOW -n 02
 python run_evaluation_plots.py -t MEDIANFLOW -n 03
@@ -52,9 +52,9 @@ python run_evaluation_plots.py -t MEDIANFLOW -n 20
 python run_evaluation_plots.py -t MEDIANFLOW -n 21
 
 
-##############################################################################################
-############################### Results KCF (OpenCV_contrib) #################################
-##############################################################################################
+###########################################
+###### Results KCF (OpenCV_contrib) #######
+###########################################
 python run_evaluation_plots.py -t KCF -n 01
 python run_evaluation_plots.py -t KCF -n 02
 python run_evaluation_plots.py -t KCF -n 03
@@ -78,9 +78,9 @@ python run_evaluation_plots.py -t KCF -n 20
 python run_evaluation_plots.py -t KCF -n 21
 
 
-##############################################################################################
-############################### Results MIL (OpenCV_contrib) #################################
-##############################################################################################
+###########################################
+##### Results MIL (OpenCV_contrib) ########
+###########################################
 python run_evaluation_plots.py -t MIL -n 01
 python run_evaluation_plots.py -t MIL -n 02
 python run_evaluation_plots.py -t MIL -n 03
@@ -104,9 +104,9 @@ python run_evaluation_plots.py -t MIL -n 20
 python run_evaluation_plots.py -t MIL -n 21
 
 
-##############################################################################################
-############################### Results TLD (OpenCV_contrib) #################################
-##############################################################################################
+###########################################
+###### Results TLD (OpenCV_contrib) #######
+###########################################
 python run_evaluation_plots.py -t TLD -n 01
 python run_evaluation_plots.py -t TLD -n 02
 python run_evaluation_plots.py -t TLD -n 03
@@ -130,9 +130,9 @@ python run_evaluation_plots.py -t TLD -n 20
 python run_evaluation_plots.py -t TLD -n 21
 
 
-##############################################################################################
-################################### Results ECO (pytracking) #################################
-##############################################################################################
+###########################################
+####### Results ECO (pytracking) ##########
+###########################################
 python run_evaluation_plots.py -t ECO -n 01
 python run_evaluation_plots.py -t ECO -n 02
 python run_evaluation_plots.py -t ECO -n 03
@@ -156,9 +156,9 @@ python run_evaluation_plots.py -t ECO -n 20
 python run_evaluation_plots.py -t ECO -n 21
 
 
-##############################################################################################
-################################### Results ATOM (pytracking) ################################
-##############################################################################################
+###########################################
+####### Results ATOM (pytracking) #########
+###########################################
 python run_evaluation_plots.py -t ATOM -n 01
 python run_evaluation_plots.py -t ATOM -n 02
 python run_evaluation_plots.py -t ATOM -n 03
@@ -182,9 +182,9 @@ python run_evaluation_plots.py -t ATOM -n 20
 python run_evaluation_plots.py -t ATOM -n 21
 
 
-##############################################################################################
-################################### Results DiMP (pytracking) ################################
-##############################################################################################
+###########################################
+###### Results DiMP (pytracking) ##########
+###########################################
 python run_evaluation_plots.py -t DiMP -n 01
 python run_evaluation_plots.py -t DiMP -n 02
 python run_evaluation_plots.py -t DiMP -n 03
@@ -208,9 +208,9 @@ python run_evaluation_plots.py -t DiMP -n 20
 python run_evaluation_plots.py -t DiMP -n 21
 
 
-##############################################################################################
-################################### Results KYS (pytracking) #################################
-##############################################################################################
+###########################################
+######## Results KYS (pytracking) #########
+###########################################
 python run_evaluation_plots.py -t KYS -n 01
 python run_evaluation_plots.py -t KYS -n 02
 python run_evaluation_plots.py -t KYS -n 03
@@ -232,3 +232,29 @@ python run_evaluation_plots.py -t KYS -n 18
 python run_evaluation_plots.py -t KYS -n 19
 python run_evaluation_plots.py -t KYS -n 20
 python run_evaluation_plots.py -t KYS -n 21
+
+
+###########################################
+########### Results DaSiamRPN #############
+###########################################
+python run_evaluation_plots.py -t DaSiamRPN -n 01
+python run_evaluation_plots.py -t DaSiamRPN -n 02
+python run_evaluation_plots.py -t DaSiamRPN -n 03
+python run_evaluation_plots.py -t DaSiamRPN -n 04
+python run_evaluation_plots.py -t DaSiamRPN -n 05
+python run_evaluation_plots.py -t DaSiamRPN -n 06
+python run_evaluation_plots.py -t DaSiamRPN -n 07
+python run_evaluation_plots.py -t DaSiamRPN -n 08
+python run_evaluation_plots.py -t DaSiamRPN -n 09
+python run_evaluation_plots.py -t DaSiamRPN -n 10
+python run_evaluation_plots.py -t DaSiamRPN -n 11
+python run_evaluation_plots.py -t DaSiamRPN -n 12
+python run_evaluation_plots.py -t DaSiamRPN -n 13
+python run_evaluation_plots.py -t DaSiamRPN -n 14
+python run_evaluation_plots.py -t DaSiamRPN -n 15
+python run_evaluation_plots.py -t DaSiamRPN -n 16
+python run_evaluation_plots.py -t DaSiamRPN -n 17
+python run_evaluation_plots.py -t DaSiamRPN -n 18
+python run_evaluation_plots.py -t DaSiamRPN -n 19
+python run_evaluation_plots.py -t DaSiamRPN -n 20
+python run_evaluation_plots.py -t DaSiamRPN -n 21
