@@ -3,7 +3,7 @@
 # Master thesis at Brno University of Technology - Faculty of Information Technology
 # Author:       Vít Ambrož (xambro15@stud.fit.vutbr.cz)
 # Supervisor:   Doc. Ing. Martin Čadík, Ph.D.
-# Module:       run_evaluation_tool.py
+# Module:       run_evaluation.py
 # Description:  Top level of evaluation single object trackers in custom groundtruth dataset
 #################################################################################################
 
@@ -27,17 +27,13 @@ if __name__ == '__main__':
     ap.add_argument("-gt", "--groundtruth", required=False, help="Path to the file with groundtruth data")
     ap.add_argument("-r", "--result", required=False, help="Path to the file with tracking result data")
     ap.add_argument("-v", "--video", required=False, help="Path to the video")
-    ap.add_argument("-img", "--img", required=False, help="Path to images sequence")
     ap.add_argument("-demo", "--demo", action='store_true', help="Path to the dataset-demo directory - annotation/dataset-demo/demo-annotation/.")
     ap.add_argument("-iou", "--iou", action='store_true', help="Flag for computing Intersection over Union")
     args = vars(ap.parse_args())
 
-    # handle video/img/demo path
+    # handle video/demo path
     # get path to the video
     path = args["video"]
-    # get path of images seq
-    if not(path) and args["img"]:
-        path = args["img"]
     # get path of demo
     if not(path) and args["demo"]:
         path = "annotation/dataset-demo/demo-annotation/demo.mp4"
@@ -69,15 +65,10 @@ if __name__ == '__main__':
 
     # create instance for evaluation
     evaluation = Evaluation(path, gt_path, result_path)
-    
-    if args["img"]:
-        # useful debugging - run drawing on images sequence (all images must be stored in given directory path)
-        evaluation.runImageSeq()
+    evaluation.loadInit()
+    # just compute Intersection over Union between groundtruth and result bounding boxes
+    if args["iou"]:
+        evaluation.computeIntersectionOverUnion()
     else:
-        evaluation.loadInit()
-        # just compute Intersection over Union between groundtruth and result bounding boxes
-        if args["iou"]:
-            evaluation.computeIntersectionOverUnion()
-        else:
-            # run video - default
-            evaluation.runVideo()
+        # run video - default
+        evaluation.runVideo()
