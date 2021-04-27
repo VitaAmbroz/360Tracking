@@ -203,7 +203,7 @@ class Tracker360Border:
         ########## 5) Tracking process ##########
         # prints just basic guide and info
         print("--------------------------------------------------------------------")
-        print("DaSiamRPN default tracking process has started...")
+        print("DaSiamRPN tracking process with border improvement has started...")
         print("Tracker  : DaSiamRPN")
         print("Frame #1 : " + str(self.bbox))
         print("Press 'Esc' or 'Q' key to exit")
@@ -211,7 +211,7 @@ class Tracker360Border:
 
         # display first frame
         cv2.imshow(self.WINDOW_NAME, frame_disp)
-        frameShifted = frame_disp
+        frameShifted = self.frame
         cv2.imshow(self.WINDOW_NAME_BORDER, frameShifted)
 
         # initialize tracker with first frame and bounding box

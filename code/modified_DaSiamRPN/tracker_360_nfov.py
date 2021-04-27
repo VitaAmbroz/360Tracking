@@ -198,7 +198,7 @@ class Tracker360NFOV:
         ########## 5) Tracking process ##########
         # prints just basic guide and info
         print("--------------------------------------------------------------------")
-        print("DaSiamRPN default tracking process has started...")
+        print("DaSiamRPN tracking process with rectilinear improvement has started...")
         print("Tracker  : DaSiamRPN")
         print("Frame #1 : " + str(self.bbox))
         print("Press 'Esc' or 'Q' key to exit")
