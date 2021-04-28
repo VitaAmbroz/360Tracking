@@ -8,23 +8,23 @@ TODO - brief description
 
 Ordinary trackers can fail or produce false positive results in the tracking process in equirectangular projection of  360° videos. These problems might be caused by equirectangular distortion or by object crossing between horizontal borders of equirectangular frame. You can see how the state-of-the-art tracker [KYS](https://github.com/visionml/pytracking) generates false positives and fails below.
 
-<img src="D:\dp\360Tracking\code\.fig\kys_default.gif" alt="kys_default" style="zoom: 75%;" />
+<img src="./code/.fig/kys_default.gif" alt="kys_default" style="zoom: 75%;" />
 
 ### Frame shift approach
 
 This approach should handle with border crossing problem. I have provided the solution using a simulation of spherical rotation in Z axis (Yaw angle).
 
-<img src="D:\dp\360Tracking\code\.fig\kys_border.gif" alt="kys_border" style="zoom: 75%;" />
+<img src="./code/.fig/kys_border.gif" alt="kys_border" style="zoom: 75%;" />
 
-<img src="D:\dp\360Tracking\code\.fig\kys_border_shift.gif" alt="kys_border_shift" style="zoom:75%;" />
+<img src="./code/.fig/kys_border_shift.gif" alt="kys_border_shift" style="zoom:75%;" />
 
 ### Normal field of view (rectilinear) approach 
 
 This approach could improve tracking process in very distorted areas in equirectangular projection. The solution simulates normal camera system that tries to keep the tracked object in the center area of rectilinear projection.
 
-<img src="D:\dp\360Tracking\code\.fig\kys_nfov.gif" alt="kys_nfov" style="zoom:75%;" />
+<img src="./code/.fig/kys_nfov.gif" alt="kys_nfov" style="zoom:75%;" />
 
-<img src="D:\dp\360Tracking\code\.fig\kys_nfov_rect.gif" alt="kys_nfov_rect" style="zoom: 67%;" />
+<img src="./code/.fig/kys_nfov_rect.gif" alt="kys_nfov_rect" style="zoom: 67%;" />
 
 ## Evaluation
 
