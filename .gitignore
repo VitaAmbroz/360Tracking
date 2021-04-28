@@ -17,3 +17,5 @@
 /code/script_run_trackers.bat
 /code/script_evaluation_iou.bat
 /code/script_evaluation_plots.bat
+
+/code/.fig/*.avi
