@@ -4,7 +4,7 @@
 # Author:       Vít Ambrož (xambro15@stud.fit.vutbr.cz)
 # Supervisor:   Doc. Ing. Martin Čadík, Ph.D.
 # Module:       run_opencv_tracking.py
-# Description:  Top level of modifications for OpenCV extra modules trackers
+# Description:  Top level module for running equirectangular improvements of OpenCV extra modules trackers
 #################################################################################################
 
 import argparse
@@ -15,8 +15,9 @@ currentdir = os.path.dirname(os.path.realpath(__file__))
 parentdir = os.path.dirname(currentdir)
 sys.path.insert(0, parentdir)
 
-from code.opencv_tracking import OpenCVTracking
-# from opencv_tracking.opencv_tracking import OpenCVTracking
+from code.opencv_tracking import OpenCVTrackingDefault
+from code.opencv_tracking import OpenCVTrackingBorder
+from code.opencv_tracking import OpenCVTrackingNFOV
 
 ###############################################################
 ###############            MAIN              ##################
@@ -33,11 +34,12 @@ if __name__ == '__main__':
     args = vars(ap.parse_args())
 
     # create instance for evaluation
-    tracking = OpenCVTracking(args["tracker"], args["video"], args["groundtruth"], args["result"])
-    tracking.initLoad()
     if args["border"]:
-        tracking.startTrackingBorder()
+        border = OpenCVTrackingBorder(args["tracker"], args["video"], args["groundtruth"], args["result"])
+        border.startTrackingBorder()
     elif args["nfov"]:
-        tracking.startTrackingNFOV()
+        nfov = OpenCVTrackingNFOV(args["tracker"], args["video"], args["groundtruth"], args["result"])
+        nfov.startTrackingNFOV()
     else:
-        tracking.startTrackingDefault()
+        default = OpenCVTrackingDefault(args["tracker"], args["video"], args["groundtruth"], args["result"])
+        default.startTrackingDefault()

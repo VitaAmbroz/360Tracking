@@ -3,43 +3,34 @@
 # Master thesis at Brno University of Technology - Faculty of Information Technology
 # Author:       Vít Ambrož (xambro15@stud.fit.vutbr.cz)
 # Supervisor:   Doc. Ing. Martin Čadík, Ph.D.
-# Module:       tracker_360_default.py
-# Description:  Default tracking using DaSiamRPN tracker
+# Module:       opencv_tracking_default.py
+# Description:  Default tracking using OpenCV extra modules
 #################################################################################################
-# --------------------------------------------------------
-# DaSiamRPN (https://github.com/foolwood/DaSiamRPN)
-# Licensed under The MIT License
-# Written by Qiang Wang (wangqiang2015 at ia.ac.cn)
-# --------------------------------------------------------
 
+from cv2 import cv2
 import sys
-import cv2
-import torch
-import numpy as np
-from os.path import realpath, dirname, join
+import os
 
-from net import SiamRPNBIG
-from run_SiamRPN import SiamRPN_init, SiamRPN_track
-from utils import get_axis_aligned_bbox, cxy_wh_2_rect, rect_2_cxy_wh
+currentdir = os.path.dirname(os.path.realpath(__file__))
+parentdir = os.path.dirname(currentdir)
+sys.path.insert(0, parentdir)
 
+from code.boundingbox import BoundingBox
+from code.boundingbox import Parser
+from code.nfov import NFOV
 
-# custom modules to improve equirectangular tracking
-from boundingbox import BoundingBox
-from parser import Parser
-
-
-class Tracker360Default:
-    """Default tracking using DaSiamRPN tracker"""
-    def __init__(self, video_path: str, groundtruth_path: str = None, save_result_path: str = None):
-        self.video_path = video_path
-        self.groundtruth_path = groundtruth_path
-        if save_result_path:
-            self.save_result_path = save_result_path
+class OpenCVTrackingDefault:
+    """Default tracking using OpenCV extra modules"""
+    def __init__(self, trackerName: str, videoPath: str, groundtruthPath: str, saveResultPath: str):
+        self.tracker_name = trackerName.upper() # kcf -> KCF
+        self.video_path = videoPath
+        self.groundtruth_path = groundtruthPath
+        self.save_result_path = saveResultPath
+        if saveResultPath:
+            self.save_result_path = saveResultPath
         else:    
-            self.save_result_path = "tmp-result-DaSiamRPN.txt"
+            self.save_result_path = "tmp-result-" + self.tracker_name + ".txt"
 
-        self.net = None
-        
         self.video = None
         self.video_width = None
         self.video_height = None
@@ -61,7 +52,10 @@ class Tracker360Default:
         self.TEXT_ROW3_POS = (30,90)
         self.TEXT_ROW4_POS = (30,120)
 
-        self.WINDOW_NAME = "Tracker-DaSiamRPN"
+        
+        self.TRACKER_TYPES = ['BOOSTING', 'MIL', 'KCF', 'TLD', 'MEDIANFLOW', 'GOTURN', 'MOSSE', 'CSRT']
+
+        self.WINDOW_NAME = "OpenCV-Tracker-" + self.tracker_name
 
 
     def _drawBoundingBox(self, videoWidth, point1, point2, boundingBox, color, thickness):
@@ -98,17 +92,8 @@ class Tracker360Default:
         return point
 
 
-    def _saveResults(self):
-        """Method for saving result bounding boxes to .txt file"""
-        # creating string result data
-        resultData = self.parser.createAnnotations(self.result_bounding_boxes)
-        # saving file on drive
-        self.parser.saveDataToFile(self.save_result_path, resultData)
-        print("File '" + self.save_result_path + "' has been successfully created with total " + str(len(self.result_bounding_boxes)) + " computed frames.")
-
-
-    def run_video_default(self):
-        """Method for start DaSiamRPN tracking without any modifications"""
+    def _initLoad(self):
+        """Method for video+groundtruth data loading and tracker initialization"""
         ########## 1) Video Checking ##########
         # Read video
         self.video = cv2.VideoCapture(self.video_path)
@@ -124,19 +109,36 @@ class Tracker360Default:
             print("Error - Could not read a video file")
             sys.exit(-1)
 
-        # save video width/height to global variables
+        # save video width/height
         self.video_width = int(self.video.get(cv2.CAP_PROP_FRAME_WIDTH))
         self.video_height = int(self.video.get(cv2.CAP_PROP_FRAME_HEIGHT))
 
+        ########## 2) Tracker Checking ##########
+        # handle selection of tracker type
+        if not(self.tracker_name in self.TRACKER_TYPES):
+            print("Invalid tracker name: '" + self.tracker_name + "'")
+            print("Supported tracker names: BOOSTING, MIL, KCF, TLD, MEDIANFLOW, GOTURN, MOSSE, CSRT")
+            sys.exit(-1)
 
-        ########## 2) Load pretrained model ##########
-        # load net
-        print("Loading pretrained model SiamRPNBIG.model...")
-        self.net = SiamRPNBIG()
-        self.net.load_state_dict(torch.load(join(realpath(dirname(__file__)), 'SiamRPNBIG.model')))
-        self.net.eval().cuda()
+        # Set up tracker
+        if self.tracker_name == 'BOOSTING':
+            self.tracker = cv2.TrackerBoosting_create()
+        elif self.tracker_name == 'MIL':
+            self.tracker = cv2.TrackerMIL_create()
+        elif self.tracker_name == 'KCF':
+            self.tracker = cv2.TrackerKCF_create()
+        elif self.tracker_name == 'TLD':
+            self.tracker = cv2.TrackerTLD_create()
+        elif self.tracker_name == 'MEDIANFLOW':
+            self.tracker = cv2.TrackerMedianFlow_create()
+        elif self.tracker_name == 'GOTURN':
+            self.tracker = cv2.TrackerGOTURN_create()
+        elif self.tracker_name == 'MOSSE':
+            self.tracker = cv2.TrackerMOSSE_create()
+        elif self.tracker_name == 'CSRT':
+            self.tracker = cv2.TrackerCSRT_create()
 
-        ########## 3) Setup opencv2 window ##########
+        ########## 3) Setup opencv window ##########
         # resize window (lets define max width is 1600px)
         if self.video_width < 1600:
             cv2.namedWindow(self.WINDOW_NAME)
@@ -162,16 +164,15 @@ class Tracker360Default:
         # use copy of frame to be shown in window
         frame_disp = self.frame.copy()
 
-
         ########## 4) Initialation of bounding box ##########
         # Set up initial bounding box
         self.bbox = None
-        self.result_bounding_boxes = []
         self.gt_bounding_boxes = []
+        self.result_bounding_boxes = []
         if self.groundtruth_path:
             # use first bounding box from given groundtruth
             self.gt_bounding_boxes = self.parser.parseGivenDataFile(self.groundtruth_path, self.video_width)
-
+            
             if len(self.gt_bounding_boxes) > 0:
                 bb1 = self.gt_bounding_boxes[0]
                 if bb1.is_annotated:
@@ -181,11 +182,9 @@ class Tracker360Default:
                     print("Error - Invalid first frame annotation from file: '" + self.groundtruth_path + "'")
                     sys.exit(-1)
         else:
-            # using opencv2 select ROI
+            # using opencv select ROI
             cv2.putText(frame_disp, 'Select target ROI and press ENTER', self.TEXT_ROW1_POS, cv2.FONT_HERSHEY_SIMPLEX, self.FONT_SCALE, (0, 200, 250), self.FONT_WEIGHT)
-
-            x, y, w, h = cv2.selectROI(self.WINDOW_NAME, frame_disp, False)
-            self.bbox = [x, y, w, h]
+            self.bbox = cv2.selectROI(self.WINDOW_NAME, frame_disp, False)
 
             # save it to result list
             p1 = (int(self.bbox[0]), int(self.bbox[1]))
@@ -200,29 +199,39 @@ class Tracker360Default:
             sys.exit(-1)
 
 
-        ########## 5) Tracking process ##########
+    def _saveResults(self):
+        """Method for saving result bounding boxes to .txt file"""
+        # creating string result data
+        resultData = self.parser.createAnnotations(self.result_bounding_boxes)
+        # saving file on drive
+        self.parser.saveDataToFile(self.save_result_path, resultData)
+        print("File '" + self.save_result_path + "' has been successfully created with total " + str(len(self.result_bounding_boxes)) + " computed frames.")
+
+
+    def startTrackingDefault(self):
+        """Method for start opencv tracking without any modifications"""
+        # default load and init
+        self._initLoad()
+
         # prints just basic guide and info
         print("--------------------------------------------------------------------")
-        print("DaSiamRPN default tracking process has started...")
-        print("Tracker  : DaSiamRPN")
+        print("OpenCV default tracking process has started...")
+        print("Tracker  : " + self.tracker_name)
         print("Frame #1 : " + str(self.bbox))
         print("Press 'Esc' or 'Q' key to exit")
         print("--------------------------------------------------------------------")
 
-        # initialize tracker with first frame and bounding box
-        ([cx, cy], [w, h]) = rect_2_cxy_wh(self.bbox)
-        target_pos, target_sz = np.array([int(cx), int(cy)]), np.array([int(w), int(h)])
-        state = SiamRPN_init(self.frame, target_pos, target_sz, self.net)
-
         # display first frame
-        cv2.imshow(self.WINDOW_NAME, frame_disp)
+        cv2.imshow(self.WINDOW_NAME, self.frame)
+
+        # Initialize tracker with first frame and bounding box
+        ok = self.tracker.init(self.frame, self.bbox)
 
         # if you want to have the FPS according to the video then uncomment this code
         # fps = cap.get(cv2.CAP_PROP_FPS)
         videoFPS = 30
         # calculate the interval between frame
         interval = int(1000/videoFPS) 
-
 
         while True:
             # Read a new frame
@@ -232,21 +241,18 @@ class Tracker360Default:
 
             # Start timer
             timer = cv2.getTickCount()
-
-            # Get tracked bbox    
-            state = SiamRPN_track(state, self.frame)  # track
-            res = cxy_wh_2_rect(state['target_pos'], state['target_sz'])
-            res = [int(l) for l in res]
-            self.bbox = res
+            
+            # Update tracker
+            ok, self.bbox = self.tracker.update(self.frame)
 
             # Calculate Frames per second (FPS)
             fps = cv2.getTickFrequency() / (cv2.getTickCount() - timer)
 
-            # draw bounding box
-            if res[0] and res[1] and res[2] and res[3]:
+            # Draw bounding box
+            if ok:
                 # Tracking success
-                p1 = (res[0], res[1])
-                p2 = (res[0] + res[2], res[1] + res[3])
+                p1 = (int(self.bbox[0]), int(self.bbox[1]))
+                p2 = (int(self.bbox[0] + self.bbox[2]), int(self.bbox[1] + self.bbox[3]))
 
                 p1 = self._checkBoundsOfPoint(p1)
                 p2 = self._checkBoundsOfPoint(p2)
@@ -258,8 +264,8 @@ class Tracker360Default:
 
                 # draw bounding box to original frame
                 self._drawBoundingBox(self.video_width, p1, p2, bb, (0, 255, 0), self.RECTANGLE_BORDER_PX)
-            else:                
-                # tracking failure
+            else:
+                # Tracking failure
                 cv2.putText(self.frame, "Tracking failure detected", self.TEXT_ROW4_POS, cv2.FONT_HERSHEY_SIMPLEX, self.FONT_SCALE, (0, 0, 255), self.FONT_WEIGHT)
                 
                 # new instance of bounding box
@@ -267,15 +273,13 @@ class Tracker360Default:
                 bb.is_annotated = False
                 self.result_bounding_boxes.append(bb)
 
-            
             # Display tracker type on frame
-            cv2.putText(self.frame, "DaSiamRPN Tracker", self.TEXT_ROW1_POS, cv2.FONT_HERSHEY_SIMPLEX, self.FONT_SCALE, (0, 200, 250), self.FONT_WEIGHT)
+            cv2.putText(self.frame, self.tracker_name + " Tracker", self.TEXT_ROW1_POS, cv2.FONT_HERSHEY_SIMPLEX, self.FONT_SCALE, (0, 200, 250), self.FONT_WEIGHT)
             # Display FPS on frame
             cv2.putText(self.frame, "Video   FPS : " + str(videoFPS), self.TEXT_ROW2_POS, cv2.FONT_HERSHEY_SIMPLEX, self.FONT_SCALE, (0, 250, 0), self.FONT_WEIGHT)
             cv2.putText(self.frame, "Tracker FPS : " + str(int(fps)), self.TEXT_ROW3_POS, cv2.FONT_HERSHEY_SIMPLEX, self.FONT_SCALE, (0, 250, 0), self.FONT_WEIGHT)
             # Display result
             cv2.imshow(self.WINDOW_NAME, self.frame)
-            
 
             # waitKey time computing
             # time in ms
@@ -291,8 +295,7 @@ class Tracker360Default:
             # Exit if 'Esc' or 'q' key is pressed
             if k == 27 or k == ord("q"): 
                 break
-
-
+        
         # always save tracker result
         self._saveResults()
 

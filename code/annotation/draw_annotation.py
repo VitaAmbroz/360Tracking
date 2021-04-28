@@ -4,7 +4,7 @@
 # Author:       Vít Ambrož (xambro15@stud.fit.vutbr.cz)
 # Supervisor:   Doc. Ing. Martin Čadík, Ph.D.
 # Module:       draw_annotation.py
-# Description:  Simple opencv drawing of annotated objects in video frames / images sequences
+# Description:  Simple OpenCV drawing of annotated objects in video frames / images sequences
 #################################################################################################
 
 from cv2 import cv2
@@ -18,11 +18,10 @@ sys.path.insert(0, parentdir)
 
 from code.boundingbox import Parser
 from code.boundingbox import BoundingBox
-# from code.boundingbox.boundingbox import BoundingBox
-# from boundingbox.boundingbox import BoundingBox
 
 
 class DrawAnnotation:
+    """Simple OpenCV drawing of annotated objects in video frames / images sequences"""
     def __init__(self, directoryPath: str):
         # list of annotated bounding box objects
         self.bounding_boxes = []
@@ -42,8 +41,8 @@ class DrawAnnotation:
         self.WINDOW_NAME = "DrawAnnotation"
 
 
-    # method for processing and showing annotated video frames sequence
     def runVideo(self):
+        """Method for processing and showing annotated video frames sequence"""
         if not(self.directory_path.endswith("/")):
             self.directory_path += "/"
         VIDEO_PATH = self.directory_path + '*.mp4'
@@ -173,8 +172,8 @@ class DrawAnnotation:
         cv2.destroyAllWindows()
 
 
-    # method for processing and showing annotated images sequence
     def runImageSeq(self):
+        """Method for processing and showing annotated images sequence"""
         if not(self.directory_path.endswith("/")):
             self.directory_path += "/"
         IMG_PATH = self.directory_path + 'img/' + '*.jpg'

@@ -1,9 +1,16 @@
-
+#################################################################################################
+# Visual object tracking in panoramic video
+# Master thesis at Brno University of Technology - Faculty of Information Technology
+# Author:       Vít Ambrož (xambro15@stud.fit.vutbr.cz)
+# Supervisor:   Doc. Ing. Martin Čadík, Ph.D.
+# Module:       ocean_360_nfov.py
+# Description:  Tracking using Ocean with normal field of view (rectilinear) improvement
+#################################################################################################
 # ------------------------------------------------------------------------------
 # Copyright (c) Microsoft
 # Licensed under the MIT License.
 # Email: zhangzhipeng2017@ia.ac.cn
-# Detail: test on a specific video (provide init bbox [optional] and video file)
+# https://github.com/researchmm/TracKit
 # ------------------------------------------------------------------------------
 
 import _init_paths
@@ -34,7 +41,7 @@ from nfov import NFOV
 
 
 class Ocean360NFOV:
-
+    """Tracking using DaSiamRPN with normal field of view (rectilinear) improvement"""
     def __init__(self, resume: str, video_path: str, groundtruth_path: str = None, save_result_path: str = None):
         # Ocean architecture attributes
         self.resume = resume
@@ -73,8 +80,22 @@ class Ocean360NFOV:
         self.WINDOW_NAME_RECTILINEAR = "Tracker-Ocean-frame_rectilinear"
 
 
-    # check if given point is in interval [0,self.width] and [0,self.height]
+    def _drawBoundingBox(self, videoWidth, point1, point2, boundingBox, color, thickness):
+        """Method for drawing rectangle according to points"""
+        if (boundingBox.is_on_border()):
+            # draw two rectangles around the region of interest
+            rightBorderPoint = (videoWidth - 1, point2[1])
+            cv2.rectangle(self.frame, point1, rightBorderPoint, color, thickness)
+
+            leftBorderPoint = (0, point1[1])
+            cv2.rectangle(self.frame, leftBorderPoint, point2, color, thickness)
+        else:
+            # draw a rectangle around the region of interest
+            cv2.rectangle(self.frame, point1, point2, color, thickness)
+
+
     def _checkBoundsOfPoint(self, point):
+        """Checks if given point is in interval [0,self.width] and [0,self.height] with x overflow"""
         # horizontal could overflow in equirectangular
         x = point[0]
         y = point[1]
@@ -93,22 +114,8 @@ class Ocean360NFOV:
         return point
 
 
-    # method for drawing rectangle according to points 
-    def _drawBoundingBox(self, videoWidth, point1, point2, boundingBox, color, thickness):
-        if (boundingBox.is_on_border()):
-            # draw two rectangles around the region of interest
-            rightBorderPoint = (videoWidth - 1, point2[1])
-            cv2.rectangle(self.frame, point1, rightBorderPoint, color, thickness)
-
-            leftBorderPoint = (0, point1[1])
-            cv2.rectangle(self.frame, leftBorderPoint, point2, color, thickness)
-        else:
-            # draw a rectangle around the region of interest
-            cv2.rectangle(self.frame, point1, point2, color, thickness)
-
-
-    # method for saving result bounding boxes to txt file
     def _saveResults(self):
+        """Method for saving result bounding boxes to .txt file"""
         # creating string result data
         resultData = self.parser.createAnnotations(self.result_bounding_boxes)
         # saving file on drive
@@ -117,8 +124,8 @@ class Ocean360NFOV:
 
 
     def run_ocean_nfov(self):
+        """Method for start Ocean tracking with improvement of mapping equirectangular to rectilinear projection"""
         # commented unnecessary tensorflow parameters
-
         # tracker initialization
         info = edict()
         info.arch = self.arch
@@ -239,7 +246,7 @@ class Ocean360NFOV:
             # using opencv2 select ROI
             cv2.putText(frame_disp, 'Select target ROI and press ENTER', self.TEXT_ROW1_POS, cv2.FONT_HERSHEY_SIMPLEX, self.FONT_SCALE, (0, 200, 250), self.FONT_WEIGHT)
 
-            x, y, w, h = cv2.selectROI(self.WINDOW_NAME, frame_disp, fromCenter=False)
+            x, y, w, h = cv2.selectROI(self.WINDOW_NAME, frame_disp, False)
             self.bbox = [x, y, w, h]
 
             # save it to result list

@@ -62,11 +62,13 @@ class NFOV():
         return (self.screen_points * 2 - 1) * np.array([self.PI, self.PI_2]) * (np.ones(self.screen_points.shape) * self.FOV)
 
     def _get_screen_img(self):
-        # sample grid with self.width * self.height points
+        """Samples to grid with self.width * self.height points"""
         xx, yy = np.meshgrid(np.linspace(0, 1, self.width), np.linspace(0, 1, self.height))
         return np.array([xx.ravel(), yy.ravel()]).T
 
     def _calcSphericaltoGnomonic(self, convertedScreenCoord):
+        # see equations
+        # http://blog.nitishmutha.com/equirectangular/360degree/2017/06/12/How-to-project-Equirectangular-image-to-rectilinear-view.html
         x = convertedScreenCoord.T[0]
         y = convertedScreenCoord.T[1]
 
@@ -103,6 +105,7 @@ class NFOV():
 
 
     def toNFOV(self, frame, center_point, computeRectPoints=False):
+        """Creates normal field of view img"""
         # equirectangular frame
         self.frame = frame
         self.frame_height = frame.shape[0]
@@ -133,8 +136,8 @@ class NFOV():
         return out
 
     
-    # check if given point is in interval [0,self.width] and [0,self.height]
     def _checkBoundsOfPoint(self, point):
+        """Checks if given point is in interval [0,self.width] and [0,self.height]"""
         if point[0] < 0: 
             point[0] = 0
         elif point[0] > self.width - 1: 
@@ -147,7 +150,9 @@ class NFOV():
 
         return point
 
+
     def computeEquirectangularBbox(self, bbox_width: int, bbox_height: int):
+        """Computing top left and bottom right corner of bounding box in equirectangular projection"""
         if len(self.sphericalCoord) and self.point1_rect and self.point2_rect:
             # get 4 centers of bounding box rectangle
             left_center_point = [self.point1_rect[0], round(self.point1_rect[1] + bbox_height/2)]

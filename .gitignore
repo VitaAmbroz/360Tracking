@@ -8,17 +8,12 @@
 # dataset
 /code/annotation/dataset
 
-# tracking
-/code/opencv_tracking/img-translation.py
-/code/opencv_tracking/img-rotation.py
-/code/opencv_tracking/demo.JPG
-
-# external repository - dont add to my repository
-/code/pytracking
-/code/TracKit
-/code/DaSiamRPN
+# external repository
+# /code/pytracking
+# /code/TracKit
+# /code/DaSiamRPN
 
 # temporary scripts
-/code/run_all_trackers.bat
-/code/evaluation_iou_all_results.bat
-/code/evaluation_draw_plots.bat
+/code/script_run_trackers.bat
+/code/script_evaluation_iou.bat
+/code/script_evaluation_plots.bat

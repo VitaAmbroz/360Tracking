@@ -1,3 +1,12 @@
+#################################################################################################
+# Visual object tracking in panoramic video
+# Master thesis at Brno University of Technology - Faculty of Information Technology
+# Author:       Vít Ambrož (xambro15@stud.fit.vutbr.cz)
+# Supervisor:   Doc. Ing. Martin Čadík, Ph.D.
+# Module:       run_video_360.py
+# Description:  Top level module for running equirectangular improvements of SiamDW and Ocean Trackers
+#################################################################################################
+
 import os
 import sys
 import argparse

@@ -1,5 +1,13 @@
+#################################################################################################
+# Visual object tracking in panoramic video
+# Master thesis at Brno University of Technology - Faculty of Information Technology
+# Author:       Vít Ambrož (xambro15@stud.fit.vutbr.cz)
+# Supervisor:   Doc. Ing. Martin Čadík, Ph.D.
+# Module:       tracker_360_border.py
+# Description:  Tracking using DaSiamRPN tracker with left/right border improvement
+#################################################################################################
 # --------------------------------------------------------
-# DaSiamRPN
+# DaSiamRPN (https://github.com/foolwood/DaSiamRPN)
 # Licensed under The MIT License
 # Written by Qiang Wang (wangqiang2015 at ia.ac.cn)
 # --------------------------------------------------------
@@ -22,7 +30,7 @@ from parser import Parser
 
 
 class Tracker360Border:
-
+    """Tracking using DaSiamRPN tracker with left/right border improvement"""
     def __init__(self, video_path: str, groundtruth_path: str = None, save_result_path: str = None):
         self.video_path = video_path
         self.groundtruth_path = groundtruth_path
@@ -58,8 +66,22 @@ class Tracker360Border:
         self.WINDOW_NAME_BORDER = "Tracker-DaSiamRPN-frame_shifted"
 
 
-    # check if given point is in interval [0,self.width] and [0,self.height]
+    def _drawBoundingBox(self, videoWidth, point1, point2, boundingBox, color, thickness):
+        """Method for drawing rectangle according to points"""
+        if (boundingBox.is_on_border()):
+            # draw two rectangles around the region of interest
+            rightBorderPoint = (videoWidth - 1, point2[1])
+            cv2.rectangle(self.frame, point1, rightBorderPoint, color, thickness)
+
+            leftBorderPoint = (0, point1[1])
+            cv2.rectangle(self.frame, leftBorderPoint, point2, color, thickness)
+        else:
+            # draw a rectangle around the region of interest
+            cv2.rectangle(self.frame, point1, point2, color, thickness)
+
+
     def _checkBoundsOfPointStrict(self, point):
+        """Checks if given point is in interval [0,self.width] and [0,self.height]"""
         # no horizontal overflow
         x = point[0]
         y = point[1]
@@ -78,22 +100,8 @@ class Tracker360Border:
         return point
 
 
-    # method for drawing rectangle according to points 
-    def _drawBoundingBox(self, videoWidth, point1, point2, boundingBox, color, thickness):
-        if (boundingBox.is_on_border()):
-            # draw two rectangles around the region of interest
-            rightBorderPoint = (videoWidth - 1, point2[1])
-            cv2.rectangle(self.frame, point1, rightBorderPoint, color, thickness)
-
-            leftBorderPoint = (0, point1[1])
-            cv2.rectangle(self.frame, leftBorderPoint, point2, color, thickness)
-        else:
-            # draw a rectangle around the region of interest
-            cv2.rectangle(self.frame, point1, point2, color, thickness)
-
-
-    # method for saving result bounding boxes to txt file
     def _saveResults(self):
+        """Method for saving result bounding boxes to .txt file"""
         # creating string result data
         resultData = self.parser.createAnnotations(self.result_bounding_boxes)
         # saving file on drive
@@ -101,9 +109,8 @@ class Tracker360Border:
         print("File '" + self.save_result_path + "' has been successfully created with total " + str(len(self.result_bounding_boxes)) + " computed frames.")
 
 
-
-    # method for start tracking without any modifications
     def run_video_border(self):
+        """Method for start DaSiamRPN tracking with improvement of object crossing left/right border in equirectangular projection"""
         ########## 1) Video Checking ##########
         # Read video
         self.video = cv2.VideoCapture(self.video_path)
@@ -184,7 +191,7 @@ class Tracker360Border:
             # using opencv2 select ROI
             cv2.putText(frame_disp, 'Select target ROI and press ENTER', self.TEXT_ROW1_POS, cv2.FONT_HERSHEY_SIMPLEX, self.FONT_SCALE, (0, 200, 250), self.FONT_WEIGHT)
 
-            x, y, w, h = cv2.selectROI(self.WINDOW_NAME, frame_disp, fromCenter=False)
+            x, y, w, h = cv2.selectROI(self.WINDOW_NAME, frame_disp, False)
             self.bbox = [x, y, w, h]
 
             # save it to result list

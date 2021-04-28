@@ -16,8 +16,6 @@ parentdir = os.path.dirname(currentdir)
 sys.path.insert(0, parentdir)
 
 from code.annotation import DrawAnnotation
-# from code.annotation.draw_annotation import DrawAnnotation
-# from annotation.draw_annotation import DrawAnnotation
 
 ###############################################################
 ###############            MAIN              ##################
@@ -38,10 +36,6 @@ if __name__ == '__main__':
     elif not(directoryPath):
         print("Directory path missing -> run_draw_annotation.py -help")
         sys.exit(-1)
-
-    # normalize directory path (path could be called from upper directory /annotation)
-    # if "annotation/" in directoryPath:
-    #     directoryPath = directoryPath.replace("annotation/", "")
 
     # create instance for drawing annotations
     drawAnnotation = DrawAnnotation(directoryPath)

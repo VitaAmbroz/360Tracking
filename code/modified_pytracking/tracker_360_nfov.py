@@ -1,3 +1,17 @@
+#################################################################################################
+# Visual object tracking in panoramic video
+# Master thesis at Brno University of Technology - Faculty of Information Technology
+# Author:       Vít Ambrož (xambro15@stud.fit.vutbr.cz)
+# Supervisor:   Doc. Ing. Martin Čadík, Ph.D.
+# Module:       tracker_360_default.py
+# Description:  Tracking using ECO, ATOM, DiMP or KYS trackers with normal field of view (rectilinear) improvement
+#################################################################################################
+# --------------------------------------------------------
+# pytracking (https://github.com/visionml/pytracking)
+# Licensed under GPL-3.0 License
+# Copyright Martin Danelljan, Goutam Bhat
+# --------------------------------------------------------
+
 import importlib
 import os
 import sys
@@ -22,17 +36,8 @@ from pytracking.evaluation.parser import Parser
 from pytracking.evaluation.nfov import NFOV
 
 
-
 class Tracker360NFOV:
-    """Wraps the tracker for evaluation and running purposes.
-    args:
-        name: Name of tracking method.
-        parameter_name: Name of parameter file.
-        video_path: Path of video.
-        groundtruth_path: Path of file with annotated objects (groundtruth).
-        save_result_path: Path to new file with results.
-    """
-
+    """Tracking using ECO, ATOM, DiMP or KYS trackers with normal field of view (rectilinear) improvement"""
     def __init__(self, name: str, parameter_name: str, video_path: str, groundtruth_path: str = None, save_result_path: str = None, run_id = None):
         assert run_id is None or isinstance(run_id, int)
 
@@ -130,8 +135,22 @@ class Tracker360NFOV:
         return params
     
     
-    # check if given point is in interval [0,self.width] and [0,self.height]
+    def _drawBoundingBox(self, videoWidth, point1, point2, boundingBox, color, thickness):
+        """Method for drawing rectangle according to points"""
+        if (boundingBox.is_on_border()):
+            # draw two rectangles around the region of interest
+            rightBorderPoint = (videoWidth - 1, point2[1])
+            cv.rectangle(self.frame, point1, rightBorderPoint, color, thickness)
+
+            leftBorderPoint = (0, point1[1])
+            cv.rectangle(self.frame, leftBorderPoint, point2, color, thickness)
+        else:
+            # draw a rectangle around the region of interest
+            cv.rectangle(self.frame, point1, point2, color, thickness)
+
+
     def _checkBoundsOfPoint(self, point):
+        """Checks if given point is in interval [0,self.width] and [0,self.height] with x overflow"""
         # horizontal could overflow in equirectangular
         x = point[0]
         y = point[1]
@@ -149,22 +168,9 @@ class Tracker360NFOV:
         point = (x,y)
         return point
 
-    # method for drawing rectangle according to points 
-    def _drawBoundingBox(self, videoWidth, point1, point2, boundingBox, color, thickness):
-        if (boundingBox.is_on_border()):
-            # draw two rectangles around the region of interest
-            rightBorderPoint = (videoWidth - 1, point2[1])
-            cv.rectangle(self.frame, point1, rightBorderPoint, color, thickness)
 
-            leftBorderPoint = (0, point1[1])
-            cv.rectangle(self.frame, leftBorderPoint, point2, color, thickness)
-        else:
-            # draw a rectangle around the region of interest
-            cv.rectangle(self.frame, point1, point2, color, thickness)
-
-
-    # method for saving result bounding boxes to txt file
     def _saveResults(self):
+        """Method for saving result bounding boxes to .txt file"""
         # creating string result data
         resultData = self.parser.createAnnotations(self.result_bounding_boxes)
         # saving file on drive
@@ -173,8 +179,8 @@ class Tracker360NFOV:
 
 
 
-    # method for start tracking with improvement of mapping equirectangular to rectilinear projection
     def run_video_nfov(self, optional_box=None, debug=None, visdom_info=None):
+        """Method for start pytracking with improvement of mapping equirectangular to rectilinear projection"""
         params = self.get_parameters()
 
         debug_ = debug
@@ -271,7 +277,7 @@ class Tracker360NFOV:
             # using opencv select ROI
             cv.putText(frame_disp, 'Select target ROI and press ENTER', self.TEXT_ROW1_POS, cv.FONT_HERSHEY_SIMPLEX, self.FONT_SCALE, (0, 200, 250), self.FONT_WEIGHT)
 
-            x, y, w, h = cv.selectROI(self.WINDOW_NAME, frame_disp, fromCenter=False)
+            x, y, w, h = cv.selectROI(self.WINDOW_NAME, frame_disp, False)
             self.bbox = [x, y, w, h]
 
             # save it to result list

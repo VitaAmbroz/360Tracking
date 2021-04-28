@@ -14,10 +14,10 @@ from boundingbox import BoundingBox
 
 
 class Parser:
-    # def __init__(self):
+    """Methods for parsing/creating bounding box objects from/to arrays/files"""
 
-    # method for parsing ground truth data / result data from given filepath
     def parseGivenDataFile(self, path, videoWidth):
+        """Method for parsing ground truth data / result data from given filepath"""
         dataFile = open(path, 'r')
         lines = dataFile.readlines()
 
@@ -50,8 +50,8 @@ class Parser:
         return boundingBoxesList
 
     
-    # method for creating string representing all annotated data (bounding_boxes list)
     def createAnnotations(self, boundingBoxesList):
+        """Method for creating string representing all annotated data (bounding_boxes list)"""
         annotations = ""
         # loop in bounding_boxes list
         for idx in range(len(boundingBoxesList)):
@@ -60,8 +60,8 @@ class Parser:
         return annotations
 
 
-    # method for creating string representing annotated data of one frame
     def createFrameAnnotation(self, currentFrame, bbox):
+        """Method for creating string representing annotated data of one frame"""
         frameAnnotation = ""
         if bbox and bbox.is_annotated:
             frameAnnotation += str(currentFrame) + ","
@@ -74,15 +74,15 @@ class Parser:
         return frameAnnotation
 
 
-    # method for creating file and writing data (overwrite file if already exists)
     def saveDataToFile(self, path, data):
+        """Method for creating file and writing data (overwrite file if already exists)"""
         newFile = open(path, "w")
         newFile.write(data)
         newFile.close()
 
 
-    # method for creating string representation of annotated bounding box
     def bboxString(self, bbox):
+        """Method for creating string representation of annotated bounding box"""
         bboxToString = ""
         if bbox and bbox.is_annotated:
             bboxToString += str(bbox.get_x1()) + ","
@@ -92,4 +92,3 @@ class Parser:
         else:
             bboxToString += "nan,nan,nan,nan"
         return bboxToString
-

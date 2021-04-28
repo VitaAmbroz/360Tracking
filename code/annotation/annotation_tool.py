@@ -19,10 +19,13 @@ sys.path.insert(0, parentdir)
 
 from code.boundingbox import Parser
 from code.boundingbox import BoundingBox
-# from boundingbox.boundingbox import BoundingBox
 
 
 class AnnotationTool:
+    """
+    Simple tool for annotating objects in equirectangular videos.
+    Based on OpenCV key and mouse handlers.
+    """
     def __init__(self, videoPath: str, groundtruthPath: str, saveImages: bool):
         self.bounding_boxes = []    # list of annotated bounding box objects
         self.bounding_box = None    # current bounding box
@@ -60,8 +63,9 @@ class AnnotationTool:
 
         self.WINDOW_NAME = "AnnotationTool"
 
-    # method for drawing rectangle according to points 
+
     def _drawBoundingBox(self, point1, point2, boundingBox, color, thickness):
+        """Method for drawing rectangle according to points"""
         if (boundingBox.is_on_border()):
             # draw two rectangles around the region of interest
             rightBorderPoint = (self.video_width - 1, point2[1])
@@ -74,8 +78,8 @@ class AnnotationTool:
             cv2.rectangle(self.frame, point1, point2, color, thickness)
 
 
-    # method for managing bounding_box objectg in bounding_boxes list
     def _handleCurrentFrame(self, frameClone):
+        """Method for managing bounding_box objectg in bounding_boxes list"""
         if self.bounding_box and self.pt1 and self.pt2:
             # current frame has been annotated
             self.bounding_box.is_annotated = True
@@ -102,8 +106,8 @@ class AnnotationTool:
             self.bounding_boxes[self.current_frame - 1] = self.bounding_box
 
 
-    # method for showing previous annotation
     def _showPreviousBoundingBox(self, duplicate = False):
+        """Method for showing previous annotation"""
         if self.prev_bounding_box_mode:
             if self.current_frame > 1:
                 prev = self.bounding_boxes[self.current_frame - 2]
@@ -111,8 +115,8 @@ class AnnotationTool:
                     self._drawBoundingBox(prev.point1, prev.point2, prev, (255, 0, 0), self.RECTANGLE_BORDER_PX)
 
 
-    # method for duplicating previous annotation
     def _duplicatePreviousBoundingBox(self):
+        """Method for duplicating previous annotation"""
         if self.current_frame > 1:
             prev = self.bounding_boxes[self.current_frame - 2]
             if prev and prev.is_annotated:
@@ -121,8 +125,8 @@ class AnnotationTool:
                 self.pt2 = prev.point2
 
 
-    # method for drawing help + annotations directly to frame
     def _textToFrame(self):
+        """Method for drawing help + annotations directly to frame"""
         if self.help_text:
             # show Frame #currect_frame : bounding_box
             annotation = "nan,nan,nan,nan"
@@ -140,9 +144,9 @@ class AnnotationTool:
             cv2.putText(self.frame, info2, self.TEXT_ROW3_POS, cv2.FONT_HERSHEY_SIMPLEX, self.FONT_SCALE, (0, 150, 250), self.FONT_WEIGHT)
 
 
-    # mouse event handler
     # source: https://www.pyimagesearch.com/2015/03/09/capturing-mouse-click-events-with-python-and-opencv/
     def _click_bounding_box(self, event, x, y, flags, param):
+        """Mouse event handler"""
         # check to see if the left mouse button was released
         if event == cv2.EVENT_LBUTTONUP:
             self.frame = self.clone.copy()
@@ -174,9 +178,8 @@ class AnnotationTool:
             cv2.imshow(self.WINDOW_NAME, self.frame)
 
 
-    #######################################################################
-    # main method for starting annotation proccess
     def start(self):
+        """Main method for starting annotation proccess"""
         # read video
         video = cv2.VideoCapture(self.video_path)
 

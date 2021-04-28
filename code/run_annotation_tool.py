@@ -16,7 +16,6 @@ parentdir = os.path.dirname(currentdir)
 sys.path.insert(0, parentdir)
 
 from code.annotation import AnnotationTool
-# from annotation.annotation_tool import AnnotationTool
 
 ###############################################################
 ###############            MAIN              ##################

@@ -4,7 +4,8 @@
 # Author:       Vít Ambrož (xambro15@stud.fit.vutbr.cz)
 # Supervisor:   Doc. Ing. Martin Čadík, Ph.D.
 # Module:       evaluation.py
-# Description:  Evaluation single object trackers in custom groundtruth dataset
+# Description:  Evaluation of single object trackers in custom groundtruth dataset.
+#               Drawing groundtruth+result bounding boxes or computing metrics.
 #################################################################################################
 
 from cv2 import cv2
@@ -18,9 +19,12 @@ sys.path.insert(0, parentdir)
 
 from code.boundingbox import Parser
 from code.boundingbox import BoundingBox
-# from boundingbox.boundingbox import BoundingBox
 
 class Evaluation:
+    """
+    Evaluation of single object trackers in custom groundtruth dataset.
+    Drawing groundtruth+result bounding boxes or computing metrics.
+    """
     def __init__(self, path: str, groundtruthPath: str, resultPath: str):
         # list of annotated groundtruth bounding box objects
         self.gt_bounding_boxes = []
@@ -54,8 +58,8 @@ class Evaluation:
         self.WINDOW_NAME = "Evaluation"
 
 
-    # method for loading video, groundtruth and result data
     def loadInit(self):
+        """Method for loading video, groundtruth and result data"""
         # Read video
         self.video = cv2.VideoCapture(self.path)
         # Exit if video not opened.
@@ -87,9 +91,11 @@ class Evaluation:
         self.result_bounding_boxes = self.parser.parseGivenDataFile(self.result_path, self.video_width)
 
 
-    # method for computing IoU metric between groundtruth and result bounding boxes
-    # Intersection over Union is an evaluation metric used to measure the accuracy of an object tracker/detector...
     def computeIntersectionOverUnion(self):
+        """
+        Method for computing IoU metric between groundtruth and result bounding boxes
+        Intersection over Union is an evaluation metric used to measure the accuracy of an object tracker/detector
+        """
         if len(self.gt_bounding_boxes) == len(self.result_bounding_boxes):
             iou_string = ""
             # loop in bounding_boxes lists
@@ -113,9 +119,9 @@ class Evaluation:
         self.video.release()
 
 
-    # method for computing IoU metric between 2 given bounding boxes
     # inspired and modified from https://www.pyimagesearch.com/2016/11/07/intersection-over-union-iou-for-object-detection/
     def intersectionOverUnion(self, bboxA: BoundingBox, bboxB: BoundingBox):
+        """Method for computing IoU metric between 2 given bounding boxes"""
         # check if there are coordinates of bounding boxes
         if bboxA.point1 and bboxA.point2 and bboxB.point1 and bboxB.point2:
             # determine the (x,y)-coordinates of the intersection rectangle
@@ -150,8 +156,8 @@ class Evaluation:
             return 0.0
 
 
-    # method for running video and drawing groundtruth + result bounding boxes
     def runVideo(self):
+        """Method for running video and drawing groundtruth + result bounding boxes"""
         # resize window (lets define max width is 1600px)
         if self.video_width < 1600:
             cv2.namedWindow(self.WINDOW_NAME)
