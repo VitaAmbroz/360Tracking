@@ -109,6 +109,8 @@ class Evaluation:
             newFile.write(iou_string)
             newFile.close()
             print("File '" + saveFilePath + "' has been created.")
+        
+        self.video.release()
 
 
     # method for computing IoU metric between 2 given bounding boxes

@@ -108,7 +108,8 @@ class EvaluationPlots:
                 'xlabel': 'Overlap threshold',
                 'ylabel': 'Overlap Precision [%]', 
                 'xlim': (0, 1.0), 'ylim': (0, 100), 
-                'title': 'Success plot'
+                'title': 'Success plot',
+                'font_size_legend': 11
             }
             
             # tracker(modified) names of lines in plot
@@ -170,4 +171,5 @@ class EvaluationPlots:
         # tikzplotlib.save('{}/{}_plot.tex'.format(result_plot_path, plot_type))
         fig.savefig(self.PATH_IOU_PLOT, dpi=300, format='pdf', transparent=True)
         plt.draw()
+        print("File " + self.PATH_IOU_PLOT + " has been created.")
         # plt.show()

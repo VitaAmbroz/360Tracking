@@ -258,3 +258,55 @@ python run_evaluation_plots.py -t DaSiamRPN -n 18
 python run_evaluation_plots.py -t DaSiamRPN -n 19
 python run_evaluation_plots.py -t DaSiamRPN -n 20
 python run_evaluation_plots.py -t DaSiamRPN -n 21
+
+
+###########################################
+############### Results Ocean #############
+###########################################
+python run_evaluation_plots.py -t Ocean -n 01
+python run_evaluation_plots.py -t Ocean -n 02
+python run_evaluation_plots.py -t Ocean -n 03
+python run_evaluation_plots.py -t Ocean -n 04
+python run_evaluation_plots.py -t Ocean -n 05
+python run_evaluation_plots.py -t Ocean -n 06
+python run_evaluation_plots.py -t Ocean -n 07
+python run_evaluation_plots.py -t Ocean -n 08
+python run_evaluation_plots.py -t Ocean -n 09
+python run_evaluation_plots.py -t Ocean -n 10
+python run_evaluation_plots.py -t Ocean -n 11
+python run_evaluation_plots.py -t Ocean -n 12
+python run_evaluation_plots.py -t Ocean -n 13
+python run_evaluation_plots.py -t Ocean -n 14
+python run_evaluation_plots.py -t Ocean -n 15
+python run_evaluation_plots.py -t Ocean -n 16
+python run_evaluation_plots.py -t Ocean -n 17
+python run_evaluation_plots.py -t Ocean -n 18
+python run_evaluation_plots.py -t Ocean -n 19
+python run_evaluation_plots.py -t Ocean -n 20
+python run_evaluation_plots.py -t Ocean -n 21
+
+
+###########################################
+############## Results SiamDW #############
+###########################################
+python run_evaluation_plots.py -t SiamDW -n 01
+python run_evaluation_plots.py -t SiamDW -n 02
+python run_evaluation_plots.py -t SiamDW -n 03
+python run_evaluation_plots.py -t SiamDW -n 04
+python run_evaluation_plots.py -t SiamDW -n 05
+python run_evaluation_plots.py -t SiamDW -n 06
+python run_evaluation_plots.py -t SiamDW -n 07
+python run_evaluation_plots.py -t SiamDW -n 08
+python run_evaluation_plots.py -t SiamDW -n 09
+python run_evaluation_plots.py -t SiamDW -n 10
+python run_evaluation_plots.py -t SiamDW -n 11
+python run_evaluation_plots.py -t SiamDW -n 12
+python run_evaluation_plots.py -t SiamDW -n 13
+python run_evaluation_plots.py -t SiamDW -n 14
+python run_evaluation_plots.py -t SiamDW -n 15
+python run_evaluation_plots.py -t SiamDW -n 16
+python run_evaluation_plots.py -t SiamDW -n 17
+python run_evaluation_plots.py -t SiamDW -n 18
+python run_evaluation_plots.py -t SiamDW -n 19
+python run_evaluation_plots.py -t SiamDW -n 20
+python run_evaluation_plots.py -t SiamDW -n 21
