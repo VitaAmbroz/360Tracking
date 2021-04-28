@@ -1,0 +1,9 @@
+[submodule "code/pytracking"]
+	path = code/pytracking
+	url = https://github.com/visionml/pytracking
+[submodule "code/DaSiamRPN"]
+	path = code/DaSiamRPN
+	url = https://github.com/foolwood/DaSiamRPN
+[submodule "code/TracKit"]
+	path = code/TracKit
+	url = https://github.com/researchmm/TracKit
