@@ -8,23 +8,23 @@ TODO - brief description
 
 Ordinary trackers can fail or produce false positive results in the tracking process in equirectangular projection of  360° videos. These problems might be caused by equirectangular distortion or by object crossing between horizontal borders of equirectangular frame. You can see how the state-of-the-art tracker [KYS](https://github.com/visionml/pytracking) generates false positives and fails below.
 
-<img src="./code/.fig/kys_default.gif" alt="kys_default" style="zoom: 75%;" />
+<img src="./code/.fig/kys_default.gif" alt="kys_default"  />
 
 ### Frame shift approach
 
-This approach should handle with border crossing problem. I have provided the solution using a simulation of spherical rotation in Z axis (Yaw angle).
+This approach should handle with border crossing problem. I have provided the solution using a simulation of spherical rotation in Z axis (Yaw angle). The tracker predicts results in shifted/rotated frame and predicted bounding box is transformed backward to original frame.
 
-<img src="./code/.fig/kys_border.gif" alt="kys_border" style="zoom: 75%;" />
+<img src="./code/.fig/kys_border.gif" alt="kys_border"  />
 
-<img src="./code/.fig/kys_border_shift.gif" alt="kys_border_shift" style="zoom:75%;" />
+
 
 ### Normal field of view (rectilinear) approach 
 
-This approach could improve tracking process in very distorted areas in equirectangular projection. The solution simulates normal camera system that tries to keep the tracked object in the center area of rectilinear projection.
+This approach could improve tracking process in very distorted areas in equirectangular projection. The solution simulates normal camera system that tries to keep the tracked object in the center area of rectilinear projection. The tracker predicts results in rectilinear/perspective projection (adaptive field of view 90°-144°) and these results are converted to equirectangular coordinates.
 
-<img src="./code/.fig/kys_nfov.gif" alt="kys_nfov" style="zoom:75%;" />
+<img src="./code/.fig/kys_nfov.gif" alt="kys_nfov"  />
 
-<img src="./code/.fig/kys_nfov_rect.gif" alt="kys_nfov_rect" style="zoom: 67%;" />
+
 
 ## Evaluation
 
