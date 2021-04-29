@@ -2,53 +2,51 @@
 
 This repository 360Tracking has been created as the part of master thesis at  [Brno University of Technology - Faculty of Information Technology](https://www.fit.vut.cz/). The master thesis has been supervised by [Doc. Ing. Martin Čadík, Ph.D.](http://cadik.posvete.cz/)
 
-TODO - brief description
-
 ## Improvements of Single Object Tracking (SOT) in 360° video
 
-Ordinary trackers can fail or produce false positive results in the tracking process in equirectangular projection of  360° videos. These problems might be caused by equirectangular distortion or by object crossing between horizontal borders of equirectangular frame. You can see how the state-of-the-art tracker [KYS](https://github.com/visionml/pytracking) generates false positives and fails below.
+Ordinary trackers can fail or produce false positive results when tracking in equirectangular projection of 360° videos. The reasons of failures could be similar as in ordinary videos with limited field of view (e.g. occlusion). Although there might be other problems be caused by equirectangular distortion. Moreover in equirectangular panorama the tracked object can cross horizontal borders of equirectangular frame. You could see how the state-of-the-art tracker [KYS](https://github.com/visionml/pytracking) generates false positives and fails below.
 
-<img src="./code/.fig/kys_default.gif" alt="kys_default"  />
+<p align="center">
+    <img src="./code/.fig/kys_default.gif" alt="kys_default"  />
+</p>
 
 ### Frame shift approach
 
-This approach should handle with border crossing problem. I have provided the solution using a simulation of spherical rotation in Z axis (Yaw angle). The tracker predicts results in shifted/rotated frame and predicted bounding box is transformed backward to original frame.
+This approach may be the right solution for border crossing problem of single object tracking in equirectangular panorama. We have provided the solution where we simply simulate spherical rotation in Z axis (Yaw angle). The tracker predicts results in shifted/rotated frame and predicted bounding box is transformed backward to original frame.
 
-<img src="./code/.fig/kys_border.gif" alt="kys_border"  />
+<p align="center">
+    <img src="./code/.fig/kys_border.gif" alt="kys_border"  />
+</p>
 
 
 
 ### Normal field of view (rectilinear) approach 
 
-This approach could improve tracking process in very distorted areas in equirectangular projection. The solution simulates normal camera system that tries to keep the tracked object in the center area of rectilinear projection. The tracker predicts results in rectilinear/perspective projection (adaptive field of view 90°-144°) and these results are converted to equirectangular coordinates.
+The second approach could improve tracking process in very distorted areas in equirectangular projection and solves border crossing problem as well. This solution simulates normal camera system that tries to keep the tracked object in the center area of rectilinear projection. The tracker predicts results in rectilinear/perspective projection (adaptive field of view from 90° to 144°) and these results are converted to equirectangular (360°) coordinates.
 
-<img src="./code/.fig/kys_nfov.gif" alt="kys_nfov"  />
+<p align="center">
+    <img src="./code/.fig/kys_nfov.gif" alt="kys_nfov"  />
+</p>
 
 
 
 ## Evaluation
 
-TODO - brief description
+We have evaluated 12 trackers for manually created dataset composed of 21 equirectangular videos...
 
 ### Dataset
 
-New dataset with annotated objects in 360° equirectangular video has been created. You can see demo of this dataset [here](./code/annotation/dataset-demo/demo-annotation) or on [YouTube](https://www.youtube.com/watch?v=kgXd6uoXa8M). This dataset includes 21 video sequences with total 9909 annotated (groundtruth) frames.
+New dataset with annotated objects in 360° equirectangular video has been created. You can see demo of this dataset [here](./code/annotation/dataset-demo/demo-annotation) or on [YouTube](https://www.youtube.com/watch?v=kgXd6uoXa8M). This dataset includes 21 video sequences with total 9909 annotated (groundtruth) frames. The bounding boxes could be overflowing the horizontal borders of equirectangular frames.
 
 You can download full dataset using script `bash ./code/script_dataset_download.sh` or you can download it manually as [zip](https://drive.google.com/file/d/1PWqpAb0DuXA58RZcEzfxqBP7C3yVH7uE/view?usp=sharing) or [folder](https://drive.google.com/drive/folders/13tkE4vY3FGGD42kDIjyS9K423vrvpKoU?usp=sharing).
 
 The videos used in this dataset has been taken from these resources (datasets 1 a 2 have been reannotated):
 
-> 1. Keng-Chi Liu, Yi-Ting Shen, Liang-Gee Chen. "Simple online and realtime tracking with spherical panoramic camera" (ICCE 2018)
+> 1. Keng-Chi Liu, Yi-Ting Shen, Liang-Gee Chen. "Simple online and realtime tracking with spherical panoramic camera" (ICCE 2018) **[[Paper]](https://ieeexplore.ieee.org/document/8326132)  [[Dataset]](https://github.com/KengChiLiu/MOT360)**
 >
->    **[[Paper]](https://ieeexplore.ieee.org/document/8326132)  [[Dataset]](https://github.com/KengChiLiu/MOT360)**
+> 2. Mi Tzu-Wei and Yang Mau-Tsuen.  "Comparison of Tracking Techniques on 360-Degree Videos" (2019) **[[Paper]](https://www.mdpi.com/2076-3417/9/16/3336)  [[Dataset]](https://drive.google.com/drive/folders/1Ybp0G6yWXYCsP06nzEMRJR-exK0DSos8)**
 >
-> 2. Mi Tzu-Wei and Yang Mau-Tsuen.  "Comparison of Tracking Techniques on 360-Degree Videos" (2019)
->
->    **[[Paper]](https://www.mdpi.com/2076-3417/9/16/3336)  [[Dataset]](https://drive.google.com/drive/folders/1Ybp0G6yWXYCsP06nzEMRJR-exK0DSos8)**
->
-> 3. Afshin Taghavi Nasrabadi, Aliehsan Samiei, Anahita Mahzari, Ryan P. McMahan, Ravi Prakash, Mylène C. Q. Farias, and Marcelo M. Carvalho. "A taxonomy and dataset for 360° videos" (2019)
->
->    **[[Paper]](https://arxiv.org/pdf/1905.03823.pdf)  [[Dataset]](https://github.com/afshin-aero/360dataset)**
+> 3. Afshin Taghavi Nasrabadi, Aliehsan Samiei, Anahita Mahzari, Ryan P. McMahan, Ravi Prakash, Mylène C. Q. Farias, and Marcelo M. Carvalho. "A taxonomy and dataset for 360° videos" (2019) **[[Paper]](https://arxiv.org/pdf/1905.03823.pdf)  [[Dataset]](https://github.com/afshin-aero/360dataset)**
 >
 > 4. Custom videos captured by [Ricoh Theta SC](https://theta360.com/en/about/theta/sc.html).
 
@@ -56,7 +54,7 @@ The videos used in this dataset has been taken from these resources (datasets 1 
 
 ### Single object trackers
 
-The custom improvements of Single Object Tracking in equirectangular projection of 360° video has been evaluated for the following well-known and state-of-the-art trackers. The python implementations of selected trackers have been made publicly available by their authors or have been added to OpenCV library.
+The custom improvements of Single Object Tracking in equirectangular projection of 360° video has been evaluated for the following well-known and state-of-the-art trackers. The python implementations of the selected trackers have been made publicly available by their authors or have been added to OpenCV library.
 
 - #### MIL **[[Paper]](https://faculty.ucmerced.edu/mhyang/papers/cvpr09a.pdf)  [[OpenCV extra modules]](https://github.com/opencv/opencv_contrib)**
 
@@ -121,9 +119,13 @@ The custom improvements of Single Object Tracking in equirectangular projection 
 > Zhipeng Zhang, Houwen Peng. 
 >"Deeper and Wider Siamese Networks for Real-Time Visual Tracking." (CVPR 2019)
 
+
+
 ### Results
 
-TODO - brief description
+These 12 trackers have been evaluated for the custom dataset mentioned above. You may notice the success plots based on Intersection over Union (IoU) metric with AUC values in legend. DEFAULT plot displays tracker results without any improvement, BORDER plot displays "frame shift approach" results and finally NFOV plot displays trackers results from normal field of view (rectilinear) approach.
+
+<img src="./code/.fig/success_plots.png" alt="success_plots"  />
 
 
 

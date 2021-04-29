@@ -310,3 +310,22 @@ python run_evaluation_plots.py -t SiamDW -n 18
 python run_evaluation_plots.py -t SiamDW -n 19
 python run_evaluation_plots.py -t SiamDW -n 20
 python run_evaluation_plots.py -t SiamDW -n 21
+
+
+###########################################
+################ Total ####################
+###########################################
+python run_evaluation_plots.py -t CSRT --allsequences
+python run_evaluation_plots.py -t MEDIANFLOW --allsequences
+python run_evaluation_plots.py -t KCF --allsequences
+python run_evaluation_plots.py -t MIL --allsequences
+python run_evaluation_plots.py -t TLD --allsequences
+python run_evaluation_plots.py -t ECO --allsequences
+python run_evaluation_plots.py -t ATOM --allsequences
+python run_evaluation_plots.py -t DiMP --allsequences
+python run_evaluation_plots.py -t KYS --allsequences
+python run_evaluation_plots.py -t DaSiamRPN --allsequences
+python run_evaluation_plots.py -t Ocean --allsequences
+python run_evaluation_plots.py -t SiamDW --allsequences
+
+python run_evaluation_plots.py -alltrackers
