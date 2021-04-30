@@ -27,7 +27,8 @@ if __name__ == '__main__':
     ap.add_argument("-r", "--result", required=False, help="Path to the file with tracking result data")
     ap.add_argument("-v", "--video", required=False, help="Path to the video")
     ap.add_argument("-demo", "--demo", action='store_true', help="Path to the dataset-demo directory - annotation/dataset-demo/demo-annotation/.")
-    ap.add_argument("-iou", "--iou", action='store_true', help="Flag for computing Intersection over Union")
+    ap.add_argument("-iou", "--iou", action='store_true', help="Flag for computing Intersection over Union metric")
+    ap.add_argument("-locationerror", "--locationerror", action='store_true', help="Flag for computing Location/Center error metric")
     args = vars(ap.parse_args())
 
     # handle video/demo path
@@ -55,7 +56,7 @@ if __name__ == '__main__':
     result_path = args["result"]
     # get demo groundtruth
     if not(result_path) and args["demo"]:
-        result_path = "annotation/dataset-demo/demo-result/demo-result-CSRT.txt"
+        result_path = "annotation/dataset-demo/demo-result/demo-CSRT-result-border.txt"
     # no path given !
     if not(result_path):
         print("Result data file path missing -> run_evaluation.py -help")
@@ -65,9 +66,13 @@ if __name__ == '__main__':
     # create instance for evaluation
     evaluation = Evaluation(path, gt_path, result_path)
     evaluation.loadInit()
-    # just compute Intersection over Union between groundtruth and result bounding boxes
+
     if args["iou"]:
+        # compute Intersection over Union between groundtruth and result bounding boxes
         evaluation.computeIntersectionOverUnion()
+    elif args["locationerror"]:
+        # compute center error between groundtruth and result bounding boxes
+        evaluation.computeCenterError()
     else:
         # run video - default
         evaluation.runVideo()

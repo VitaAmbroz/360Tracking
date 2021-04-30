@@ -86,7 +86,7 @@ class NFOV():
         return np.array([lon, lat]).T
 
 
-    ########################### Stackexchange atrtibution ##############################################
+    ################################## Stackexchange atribution #######################################
     # https://codereview.stackexchange.com/questions/28207/finding-the-closest-point-to-a-list-of-points
     # Asked by dassouki:    https://codereview.stackexchange.com/users/190/dassouki
     # Answeerd by jaime:    https://codereview.stackexchange.com/users/20894/jaime

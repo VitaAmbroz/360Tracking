@@ -94,7 +94,7 @@ class Evaluation:
     def computeIntersectionOverUnion(self):
         """
         Method for computing IoU metric between groundtruth and result bounding boxes
-        Intersection over Union is an evaluation metric used to measure the accuracy of an object tracker/detector
+        Intersection over Union is an evaluation metric used to measure the accuracy/success of an object tracker/detector
         """
         if len(self.gt_bounding_boxes) == len(self.result_bounding_boxes):
             iou_string = ""
@@ -103,11 +103,11 @@ class Evaluation:
                 gt_bbox = self.gt_bounding_boxes[idx]
                 result_bbox = self.result_bounding_boxes[idx]
 
-                iou = self.intersectionOverUnion(gt_bbox, result_bbox)
-                # debug prints
-                # print("Frame #" + str(idx+1) + " : " + str(iou))
-                # store iou results to list
-                iou_string += str(iou) + "\n"
+                # check if ground truth is not nan (occlusion) -> ignore occluded frames
+                if gt_bbox.point1 and gt_bbox.point2:
+                    iou = self.intersectionOverUnion(gt_bbox, result_bbox)
+                    # store iou results to list
+                    iou_string += str(iou) + "\n"
 
             # saving file on drive
             saveFilePath = self.result_path.replace(".txt", "-iou.txt")
@@ -150,10 +150,58 @@ class Evaluation:
             
             # return the intersection over union value
             return iou
-        elif not(bboxA.point1) and not(bboxA.point2) and not(bboxB.point1) and not(bboxB.point2):
-            return 1.0
         else:
+            # tracker failures
             return 0.0
+
+
+    # def computeCenterError(self):
+    #     """
+    #     Method for computing Location error metric between groundtruth and result bounding boxes centers
+    #     Location error is an evaluation metric used to measure the accuracy of an object tracker/detector
+    #     """
+
+    #     if len(self.gt_bounding_boxes) == len(self.result_bounding_boxes):
+    #         centor_error_list = []
+    #         center_error_string = ""
+
+    #         # loop in bounding_boxes lists
+    #         for idx in range(len(self.gt_bounding_boxes)):
+    #             gt_bbox = self.gt_bounding_boxes[idx]
+    #             result_bbox = self.result_bounding_boxes[idx]
+
+    #             # check if ground truth is not Nan (occlusion) -> ignore occluded frames
+    #             if gt_bbox.point1 and gt_bbox.point2:
+    #                 center_error = self.intersectionOverUnion(gt_bbox, result_bbox)
+    #                 # debug prints
+    #                 print("Frame #" + str(idx+1) + " : " + str(center_error))
+    #                 # store iou results to list
+    #                 # iou_string += str(center_error) + "\n"
+
+    #         # saving file on drive
+    #         # saveFilePath = self.result_path.replace(".txt", "-iou.txt")
+    #         # newFile = open(saveFilePath, "w")
+    #         # newFile.write(iou_string)
+    #         # newFile.close()
+    #         # print("File '" + saveFilePath + "' has been created.")
+        
+    #     self.video.release()
+
+
+    # def centerError(self, bboxA: BoundingBox, bboxB: BoundingBox):
+    #     if bboxA.point1 and bboxA.point2 and bboxB.point1 and bboxB.point2:
+    #         # bboxA and bboxB have valid coordinates ()
+            
+
+    #         # possible fix because of previous float rounding - max iou is 1.0
+    #         if center_error < 0:
+    #             center_error = 0
+            
+    #         # return the intersection over union value
+    #         return center_error
+    #     else:
+
+    #         return -1
 
 
     def runVideo(self):
