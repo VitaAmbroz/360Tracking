@@ -9,6 +9,7 @@
 #################################################################################################
 
 from cv2 import cv2
+import numpy as np
 import sys
 import glob
 import os
@@ -91,6 +92,9 @@ class Evaluation:
         self.result_bounding_boxes = self.parser.parseGivenDataFile(self.result_path, self.video_width)
 
 
+    ############################################################
+    ################ Intersection over Union ###################
+    ############################################################
     def computeIntersectionOverUnion(self):
         """
         Method for computing IoU metric between groundtruth and result bounding boxes
@@ -122,8 +126,8 @@ class Evaluation:
     # inspired and modified from https://www.pyimagesearch.com/2016/11/07/intersection-over-union-iou-for-object-detection/
     def intersectionOverUnion(self, bboxA: BoundingBox, bboxB: BoundingBox):
         """Method for computing IoU metric between 2 given bounding boxes"""
-        # check if there are coordinates of bounding boxes
         if bboxA.point1 and bboxA.point2 and bboxB.point1 and bboxB.point2:
+            # bboxA and bboxB have valid coordinates
             # determine the (x,y)-coordinates of the intersection rectangle
             left_top_x = max(bboxA.get_point1_x(), bboxB.get_point1_x())
             left_top_y = max(bboxA.get_point1_y(), bboxB.get_point1_y())
@@ -148,62 +152,97 @@ class Evaluation:
             if iou > 1.0:
                 iou = 1.0
             
-            # return the intersection over union value
             return iou
         else:
             # tracker failures
             return 0.0
 
 
-    # def computeCenterError(self):
-    #     """
-    #     Method for computing Location error metric between groundtruth and result bounding boxes centers
-    #     Location error is an evaluation metric used to measure the accuracy of an object tracker/detector
-    #     """
+    ############################################################
+    ################ Euclidian distance (L2 norm) ##############
+    ############################################################
+    def computeCenterError(self):
+        """
+        Method for computing Location error metric between groundtruth and result bounding boxes centers
+        Location error is an evaluation metric used to measure the accuracy of an object tracker/detector
+        """
+        if len(self.gt_bounding_boxes) == len(self.result_bounding_boxes):
+            center_error_string = ""
+            # loop in bounding_boxes lists
+            for idx in range(len(self.gt_bounding_boxes)):
+                gt_bbox = self.gt_bounding_boxes[idx]
+                result_bbox = self.result_bounding_boxes[idx]
 
-    #     if len(self.gt_bounding_boxes) == len(self.result_bounding_boxes):
-    #         centor_error_list = []
-    #         center_error_string = ""
+                # check if ground truth is not Nan (occlusion) -> ignore occluded frames
+                if gt_bbox.point1 and gt_bbox.point2:
+                    center_error = self.centerError(gt_bbox, result_bbox)
+                    center_error_string += str(center_error) + "\n"
 
-    #         # loop in bounding_boxes lists
-    #         for idx in range(len(self.gt_bounding_boxes)):
-    #             gt_bbox = self.gt_bounding_boxes[idx]
-    #             result_bbox = self.result_bounding_boxes[idx]
-
-    #             # check if ground truth is not Nan (occlusion) -> ignore occluded frames
-    #             if gt_bbox.point1 and gt_bbox.point2:
-    #                 center_error = self.intersectionOverUnion(gt_bbox, result_bbox)
-    #                 # debug prints
-    #                 print("Frame #" + str(idx+1) + " : " + str(center_error))
-    #                 # store iou results to list
-    #                 # iou_string += str(center_error) + "\n"
-
-    #         # saving file on drive
-    #         # saveFilePath = self.result_path.replace(".txt", "-iou.txt")
-    #         # newFile = open(saveFilePath, "w")
-    #         # newFile.write(iou_string)
-    #         # newFile.close()
-    #         # print("File '" + saveFilePath + "' has been created.")
+            # saving file on drive
+            saveFilePath = self.result_path.replace(".txt", "-centererror.txt")
+            newFile = open(saveFilePath, "w")
+            newFile.write(center_error_string)
+            newFile.close()
+            print("File '" + saveFilePath + "' has been created.")
         
-    #     self.video.release()
+        self.video.release()
 
 
-    # def centerError(self, bboxA: BoundingBox, bboxB: BoundingBox):
-    #     if bboxA.point1 and bboxA.point2 and bboxB.point1 and bboxB.point2:
-    #         # bboxA and bboxB have valid coordinates ()
+    def centerError(self, bboxA: BoundingBox, bboxB: BoundingBox):
+        """
+        Method for computing Euclidian distance between 2 given bounding boxes
+        This method also normalizes distance according to video height (our dataset varies a lot in resolution -smallest 720p, highest 2160p)
+        """
+        if bboxA.point1 and bboxA.point2 and bboxB.point1 and bboxB.point2:
+            # centers for distance from left point to right (modulo by video width)
+            centerA1 = np.array([(bboxA.get_point1_x() + bboxA.get_width()/2) % self.video_width, bboxA.get_point1_y() + bboxA.get_height()/2])
+            centerB1 = np.array([(bboxB.get_point1_x() + bboxB.get_width()/2) % self.video_width, bboxB.get_point1_y() + bboxB.get_height()/2])
+
+            # centers for distance from right point to left (possible in equirectangular panorama)
+            # center bboxA x could be on video_width-100, center bboxB x could be on 100 (distance is 200 in equirectangular)
+            centerA2 = np.array([])
+            centerB2 = np.array([])
             
+            if centerA1[0] < centerB1[0]:
+                # e.g. center bboxA x is 100, center bboxB x is video_width - 100
+                centerA2 = np.array([self.video_width + centerA1[0], centerA1[1]])
+                centerB2 = np.array([centerB1[0], centerB1[1]])
+            else:
+                # e.g. center bboxA x is video_width - 100, center bboxB x is 100
+                centerA2 = np.array([centerA1[0], centerA1[1]])
+                centerB2 = np.array([self.video_width + centerB1[0], centerB1[1]])
 
-    #         # possible fix because of previous float rounding - max iou is 1.0
-    #         if center_error < 0:
-    #             center_error = 0
+            ################################## Stackoverflow atribution #######################################
+            # https://stackoverflow.com/questions/1401712/how-can-the-euclidean-distance-be-calculated-with-numpy
+            # Asked by Nathan Fellman:    https://stackoverflow.com/users/1084/nathan-fellman
+            # Answeerd by u0b34a0f6ae:    https://stackoverflow.com/users/137317/u0b34a0f6ae
+            # euclidian distance is L2 norm
+            euclidian_dist1 = np.linalg.norm(centerA1 - centerB1)
+            euclidian_dist2 = np.linalg.norm(centerA2 - centerB2)
+
+            euclidian_dist = euclidian_dist1 if euclidian_dist1 < euclidian_dist2 else euclidian_dist2
+
+            # our dataset varies a lot in resolution (smallest 720p, highest 2160p)
+            SMALLEST_VIDEO_HEIGHT = 720
+            correct_ratio = self.video_width / SMALLEST_VIDEO_HEIGHT
+            # normalize it for correct plots
+            euclidian_dist = euclidian_dist / correct_ratio
+
+            # possible fix because of previous float rounding - min center error is 0
+            if euclidian_dist < 0:
+                euclidian_dist = 0
             
-    #         # return the intersection over union value
-    #         return center_error
-    #     else:
+            # return the intersection over union value
+            return euclidian_dist
+        else:
+            # precision plots got X range (0,51) - 100px should define tracker failure quite well
+            MAX_ERROR = 100
+            return MAX_ERROR
 
-    #         return -1
 
-
+    ############################################################
+    ############## Displaying results + groundtruth ############
+    ############################################################
     def runVideo(self):
         """Method for running video and drawing groundtruth + result bounding boxes"""
         # resize window (lets define max width is 1600px)

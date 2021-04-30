@@ -16,6 +16,7 @@
 # temporary scripts
 /code/script_run_trackers.bat
 /code/script_evaluation_iou.bat
+/code/script_evaluation_center_error.bat
 /code/script_evaluation_plots.bat
 
 # tmp generated videos
@@ -24,6 +25,6 @@
 /code/.fig/*.mov
 
 
-# ignore computed metrics
-/code/annotation/dataset-demo/demo-result/*-iou.txt
+# ignore files with computed metrics
 *-iou.txt
+*-centererror.txt

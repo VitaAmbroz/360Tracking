@@ -31,6 +31,11 @@ class EvaluationPlots:
         self.PATH_IOU_DEFAULT = "annotation/results/<TRACKER>/<NUMBER>/<NUMBER>-result-default-iou.txt"
         self.PATH_IOU_BORDER = "annotation/results/<TRACKER>/<NUMBER>/<NUMBER>-result-border-iou.txt"
         self.PATH_IOU_NFOV = "annotation/results/<TRACKER>/<NUMBER>/<NUMBER>-result-nfov-iou.txt"
+        
+        # paths for center error files
+        self.PATH_CENTER_ERROR_DEFAULT = "annotation/results/<TRACKER>/<NUMBER>/<NUMBER>-result-default-centererror.txt"
+        self.PATH_CENTER_ERROR_BORDER = "annotation/results/<TRACKER>/<NUMBER>/<NUMBER>-result-border-centererror.txt"
+        self.PATH_CENTER_ERROR_NFOV = "annotation/results/<TRACKER>/<NUMBER>/<NUMBER>-result-nfov-centererror.txt"
 
         # constants of trackers names and dataset sequences
         self.TRACKERS = ["ECO","ATOM","DiMP","KYS","DaSiamRPN","Ocean","SiamDW","CSRT","MEDIANFLOW","KCF","MIL","TLD"]
@@ -41,7 +46,12 @@ class EvaluationPlots:
         self.PATH_SUCCESS_PLOT_ALLSEQUENCES = "annotation/results/total-success/<TRACKER>-success-plot"
         self.PATH_SUCCESS_PLOT_ALLSEQUENCES_VAR = "annotation/results/total-success/<TRACKER>-success-plot-variance"
         self.PATH_SUCCESS_PLOT_ALLTRACKERS = "annotation/results/total-success/all-trackers-success-plot"
-        self.PATH_SUCCESS_PLOT_ALLTRACKERS_SEQ = "annotation/results/total-success/<NUMBER>-trackers-success-plot"
+        self.PATH_SUCCESS_PLOT_ALLTRACKERS_SEQ = "annotation/results/total-success/all-trackers/<NUMBER>-trackers-success-plot"
+
+        self.PATH_PRECISION_PLOT = "annotation/results/<TRACKER>/<NUMBER>/<NUMBER>-precision-plot"
+        self.PATH_PRECISION_PLOT_ALLSEQUENCES = "annotation/results/total-precision/<TRACKER>-precision-plot"
+        self.PATH_PRECISION_PLOT_ALLTRACKERS = "annotation/results/total-precision/all-trackers-precision-plot"
+        self.PATH_PRECISION_PLOT_ALLTRACKERS_SEQ = "annotation/results/total-precision/all-trackers/<NUMBER>-trackers-precision-plot"
 
     
     def _parseGivenDataFile(self, path):
@@ -143,7 +153,9 @@ class EvaluationPlots:
         # plt.show()
 
 
-
+    ################################################################################
+    ############################### Success plots ##################################
+    ################################################################################
     def createSuccessPlot(self, tracker: str, seq_number: str):
         """Draws and saves success plot for given tracker and sequence"""
         self.PATH_IOU_DEFAULT = self.PATH_IOU_DEFAULT.replace("<TRACKER>", tracker).replace("<NUMBER>", seq_number)
@@ -177,6 +189,9 @@ class EvaluationPlots:
             auc3 = auc_curve[2].mean(-1)
             # concatenate to tensor list
             auc = torch.Tensor([auc1, auc2, auc3])
+
+            print(auc_curve)
+            print(auc)
 
             success_plot_opts = {
                 'plot_type': 'success', 
@@ -243,6 +258,66 @@ class EvaluationPlots:
         self._plotDrawSave(auc_curve, threshold_set_overlap, auc, tracker_names, self._getPlotDrawStyles(), success_plot_opts, self.PATH_SUCCESS_PLOT_ALLSEQUENCES)
 
         
+    def createSuccessPlotAllTrackersSequence(self, seq_number: str, default=False, border=False, nfov=False):
+        """Draws and saves success plot for all trackers (default/border/nfov) and for given video sequence only"""
+        plot_bin_gap = 0.05
+        threshold_set_overlap = torch.arange(0.0, 1.0 + plot_bin_gap, plot_bin_gap, dtype=torch.float64)
+        ave_success_rate_plot_overlap = torch.zeros((len(self.TRACKERS), threshold_set_overlap.numel()), dtype=torch.float32)
+
+        path = ""
+        save_path = self.PATH_SUCCESS_PLOT_ALLTRACKERS_SEQ.replace("<NUMBER>", seq_number)
+        tracker_names = self.TRACKERS
+        title = "Success plot"
+        if default:
+            path = self.PATH_IOU_DEFAULT
+            save_path += "-default"
+            title += " - DEFAULT"
+        elif border:
+            path = self.PATH_IOU_BORDER
+            save_path += "-border"
+            title += " - BORDER"
+        elif nfov:
+            path = self.PATH_IOU_NFOV
+            save_path += "-nfov"
+            title += " - NFOV"
+
+        for i in range(len(self.TRACKERS)):
+            # load and parse data
+            current_path = path.replace("<TRACKER>", self.TRACKERS[i]).replace("<NUMBER>", seq_number)
+            iou = self._parseGivenDataFile(current_path)
+
+            # transform python lists to tensors
+            iou_tensor = torch.Tensor(iou)
+
+            # success computing
+            ave_success_rate_plot_overlap[i,:] = (iou_tensor.view(-1, 1) > threshold_set_overlap.view(1, -1)).sum(0).float() / len(iou)
+
+        # auc_curve as mean of ave_success_rate_plot_overlap tensors
+        auc_curve = ave_success_rate_plot_overlap * 100.0
+
+        auc = []
+        for i in range(len(self.TRACKERS)):
+            # compute AUC (area under curve for 12 results/IoU)
+            auc_next = auc_curve[i].mean(-1).item()
+            # concatenate to tensor list
+            auc.append(auc_next)
+        # python list to tensor
+        auc = torch.Tensor(auc)
+        
+        success_plot_opts = {
+            'plot_type': 'success', 
+            'legend_loc': 'upper right', 
+            'xlabel': 'Overlap threshold',
+            'ylabel': 'Overlap Precision [%]', 
+            'xlim': (0, 1.0), 'ylim': (0, 100), 
+            'title': title + " (Sequence " + seq_number + ")",
+            'font_size_legend': 10,
+            'bbox_to_anchor': (1.25, 1.0)
+        }
+        
+        self._plotDrawSave(auc_curve, threshold_set_overlap, auc, tracker_names, self._getPlotDrawStyles(), success_plot_opts, save_path)
+
+
     def createSuccessPlotAllTrackers(self, default=False, border=False, nfov=False):
         """Draws and saves success plot for all trackers (default/border/nfov) and all 01-21 video sequences in dataset"""
         plot_bin_gap = 0.05
@@ -296,12 +371,8 @@ class EvaluationPlots:
         self._plotDrawSave(auc_curve, threshold_set_overlap, auc, tracker_names, self._getPlotDrawStyles(), success_plot_opts, save_path)
 
 
-
-
-
-
     def createSuccessPlotAllSequencesVariance(self, tracker: str):
-        """Draws and saves success plot for given tracker and all 01-21 video sequences in dataset"""
+        """Draws and saves success plot for given tracker and all 01-21 video sequences in dataset with variance min and max"""
         plot_bin_gap = 0.05
         threshold_set_overlap = torch.arange(0.0, 1.0 + plot_bin_gap, plot_bin_gap, dtype=torch.float64)
         ave_success_rate_plot_overlap = torch.zeros((len(self.DATASET), 3, threshold_set_overlap.numel()), dtype=torch.float32)
@@ -395,3 +466,204 @@ class EvaluationPlots:
         plt.draw()
         print("File " + pdf_path + " has been created.")
         # plt.show()
+
+
+
+
+    ################################################################################
+    ############################### Precision plots ################################
+    ################################################################################
+    def createPrecisionPlot(self, tracker: str, seq_number: str):
+        """Draws and saves precision plot for given tracker and sequence"""
+        self.PATH_CENTER_ERROR_DEFAULT = self.PATH_CENTER_ERROR_DEFAULT.replace("<TRACKER>", tracker).replace("<NUMBER>", seq_number)
+        self.PATH_CENTER_ERROR_BORDER = self.PATH_CENTER_ERROR_BORDER.replace("<TRACKER>", tracker).replace("<NUMBER>", seq_number)
+        self.PATH_CENTER_ERROR_NFOV = self.PATH_CENTER_ERROR_NFOV.replace("<TRACKER>", tracker).replace("<NUMBER>", seq_number)
+
+        cerror_default = self._parseGivenDataFile(self.PATH_CENTER_ERROR_DEFAULT)
+        cerror_border = self._parseGivenDataFile(self.PATH_CENTER_ERROR_BORDER)
+        cerror_nfov = self._parseGivenDataFile(self.PATH_CENTER_ERROR_NFOV)
+
+        if len(cerror_default) > 0 and len(cerror_border) > 0 and len(cerror_nfov) > 0:
+            threshold_set_center = torch.arange(0, 51, dtype=torch.float64)
+            ave_success_rate_plot_center = torch.zeros((3, threshold_set_center.numel()), dtype=torch.float32)
+            
+            # transform python list to tensors
+            cerror_default_tensor = torch.Tensor(cerror_default)
+            cerror_border_tensor = torch.Tensor(cerror_border)
+            cerror_nfov_tensor = torch.Tensor(cerror_nfov)
+
+            # location error threshold computing
+            ave_success_rate_plot_center[0] = (cerror_default_tensor.view(-1, 1) <= threshold_set_center.view(1, -1)).sum(0).float() / len(cerror_default)
+            ave_success_rate_plot_center[1] = (cerror_border_tensor.view(-1, 1) <= threshold_set_center.view(1, -1)).sum(0).float() / len(cerror_border)
+            ave_success_rate_plot_center[2] = (cerror_nfov_tensor.view(-1, 1) <= threshold_set_center.view(1, -1)).sum(0).float() / len(cerror_nfov)
+
+            # create curves
+            prec_curve = ave_success_rate_plot_center * 100.0
+            # score should be counted for max 20 pixel error
+            prec_score = prec_curve[:, 20]
+
+            precision_plot_opts = {
+                'plot_type': 'precision', 
+                'legend_loc': 'lower left', 
+                'xlabel': 'Location error threshold [pixels]',
+                'ylabel': 'Distance Precision [%]', 
+                'xlim': (0, 50), 'ylim': (0, 100), 
+                'title': 'Precision plot - ' + tracker,
+                'font_size_legend': 11
+            }
+            
+            # tracker(modified) names of lines in plot
+            tracker_names = [tracker + "-DEFAULT", tracker + "-BORDER", tracker + "-NFOV"]
+            
+            self.PATH_PRECISION_PLOT = self.PATH_PRECISION_PLOT.replace("<TRACKER>", tracker).replace("<NUMBER>", seq_number)
+            self._plotDrawSave(prec_curve, threshold_set_center, prec_score, tracker_names, self._getPlotDrawStyles(), precision_plot_opts, self.PATH_PRECISION_PLOT)
+
+
+    def createPrecisionPlotAllSequences(self, tracker: str):
+        """Draws and saves precision plot for given tracker and all 01-21 video sequences in dataset"""
+        threshold_set_center = torch.arange(0, 51, dtype=torch.float64)
+        ave_success_rate_plot_center = torch.zeros((len(self.DATASET), 3, threshold_set_center.numel()), dtype=torch.float32)
+
+        for i in range(len(self.DATASET)):
+            # load and parse data
+            path_default = self.PATH_CENTER_ERROR_DEFAULT.replace("<TRACKER>", tracker).replace("<NUMBER>", self.DATASET[i])
+            path_border = self.PATH_CENTER_ERROR_BORDER.replace("<TRACKER>", tracker).replace("<NUMBER>", self.DATASET[i])
+            path_nfov = self.PATH_CENTER_ERROR_NFOV.replace("<TRACKER>", tracker).replace("<NUMBER>", self.DATASET[i])
+            
+            cerror_default = self._parseGivenDataFile(path_default)
+            cerror_border = self._parseGivenDataFile(path_border)
+            cerror_nfov = self._parseGivenDataFile(path_nfov)
+
+            # transform python lists to tensors
+            cerror_default_tensor = torch.Tensor(cerror_default)
+            cerror_border_tensor = torch.Tensor(cerror_border)
+            cerror_nfov_tensor = torch.Tensor(cerror_nfov)
+
+            # success computing
+            ave_success_rate_plot_center[i,0,:] = (cerror_default_tensor.view(-1, 1) <= threshold_set_center.view(1, -1)).sum(0).float() / len(cerror_default)
+            ave_success_rate_plot_center[i,1,:] = (cerror_border_tensor.view(-1, 1) <= threshold_set_center.view(1, -1)).sum(0).float() / len(cerror_border)
+            ave_success_rate_plot_center[i,2,:] = (cerror_nfov_tensor.view(-1, 1) <= threshold_set_center.view(1, -1)).sum(0).float() / len(cerror_nfov)
+
+        # create curves
+        prec_curve = ave_success_rate_plot_center.mean(0) * 100.0
+        # score should be counted for max 20 pixel error
+        prec_score = prec_curve[:, 20]
+
+        precision_plot_opts = {
+            'plot_type': 'precision', 
+            'legend_loc': 'lower right', 
+            'xlabel': 'Location error threshold [pixels]',
+            'ylabel': 'Distance Precision [%]', 
+            'xlim': (0, 50), 'ylim': (0, 100), 
+            'title': 'Precision plot - ' + tracker,
+            'font_size_legend': 11
+        }
+        
+        # tracker(modified) names of lines in plot
+        tracker_names = [tracker + "-DEFAULT", tracker + "-BORDER", tracker + "-NFOV"]
+        
+        self.PATH_PRECISION_PLOT_ALLSEQUENCES = self.PATH_PRECISION_PLOT_ALLSEQUENCES.replace("<TRACKER>", tracker)
+        self._plotDrawSave(prec_curve, threshold_set_center, prec_score, tracker_names, self._getPlotDrawStyles(), precision_plot_opts, self.PATH_PRECISION_PLOT_ALLSEQUENCES)
+
+
+    def createPrecisionPlotAllTrackersSequence(self, seq_number: str, default=False, border=False, nfov=False):
+        """Draws and saves precision plot for all trackers (default/border/nfov) and for given video sequence only"""
+        threshold_set_center = torch.arange(0, 51, dtype=torch.float64)
+        ave_success_rate_plot_center = torch.zeros((len(self.TRACKERS), threshold_set_center.numel()), dtype=torch.float32)
+
+        path = ""
+        save_path = self.PATH_PRECISION_PLOT_ALLTRACKERS_SEQ.replace("<NUMBER>", seq_number)
+        tracker_names = self.TRACKERS
+        title = "Precision plot"
+        if default:
+            path = self.PATH_CENTER_ERROR_DEFAULT
+            save_path += "-default"
+            title += " - DEFAULT"
+        elif border:
+            path = self.PATH_CENTER_ERROR_BORDER
+            save_path += "-border"
+            title += " - BORDER"
+        elif nfov:
+            path = self.PATH_CENTER_ERROR_NFOV
+            save_path += "-nfov"
+            title += " - NFOV"
+
+        for i in range(len(self.TRACKERS)):
+            # load and parse data
+            current_path = path.replace("<TRACKER>", self.TRACKERS[i]).replace("<NUMBER>", seq_number)
+            cerror = self._parseGivenDataFile(current_path)
+
+            # transform python lists to tensors
+            cerror_tensor = torch.Tensor(cerror)
+
+            # success computing
+            ave_success_rate_plot_center[i,:] = (cerror_tensor.view(-1, 1) <= threshold_set_center.view(1, -1)).sum(0).float() / len(cerror)
+
+        # create curves
+        prec_curve = ave_success_rate_plot_center * 100.0
+        # score should be counted for max 20 pixel error
+        prec_score = prec_curve[:, 20]
+        
+        precision_plot_opts = {
+            'plot_type': 'precision', 
+            'legend_loc': 'lower right', 
+            'xlabel': 'Location error threshold [pixels]',
+            'ylabel': 'Distance Precision [%]', 
+            'xlim': (0, 50), 'ylim': (0, 100), 
+            'title': title + " (Sequence " + seq_number + ")",
+            'font_size_legend': 10
+        }
+        
+        self._plotDrawSave(prec_curve, threshold_set_center, prec_score, tracker_names, self._getPlotDrawStyles(), precision_plot_opts, save_path)
+
+
+    def createPrecisionPlotAllTrackers(self, default=False, border=False, nfov=False):
+        """Draws and saves success plot for all trackers (default/border/nfov) and all 01-21 video sequences in dataset"""
+        threshold_set_center = torch.arange(0, 51, dtype=torch.float64)
+        ave_success_rate_plot_center = torch.zeros((len(self.DATASET), len(self.TRACKERS), threshold_set_center.numel()), dtype=torch.float32)
+
+        path = ""
+        save_path = self.PATH_PRECISION_PLOT_ALLTRACKERS
+        tracker_names = self.TRACKERS
+        title = "Precision plot"
+        if default:
+            path = self.PATH_CENTER_ERROR_DEFAULT
+            save_path += "-default"
+            title += " - DEFAULT"
+        elif border:
+            path = self.PATH_CENTER_ERROR_BORDER
+            save_path += "-border"
+            title += " - BORDER"
+        elif nfov:
+            path = self.PATH_CENTER_ERROR_NFOV
+            save_path += "-nfov"
+            title += " - NFOV"
+
+        for i in range(len(self.DATASET)):
+            for j in range(len(self.TRACKERS)):
+                # load and parse data
+                current_path = path.replace("<TRACKER>", self.TRACKERS[j]).replace("<NUMBER>", self.DATASET[i])
+                cerror = self._parseGivenDataFile(current_path)
+
+                # transform python lists to tensors
+                cerror_tensor = torch.Tensor(cerror)
+
+                # success computing
+                ave_success_rate_plot_center[i,j,:] = (cerror_tensor.view(-1, 1) <= threshold_set_center.view(1, -1)).sum(0).float() / len(cerror)
+
+        # create curves
+        prec_curve = ave_success_rate_plot_center.mean(0) * 100.0
+        # score should be counted for max 20 pixel error
+        prec_score = prec_curve[:, 20]
+
+        precision_plot_opts = {
+            'plot_type': 'precision', 
+            'legend_loc': 'lower right', 
+            'xlabel': 'Location error threshold [pixels]',
+            'ylabel': 'Distance Precision [%]', 
+            'xlim': (0, 50), 'ylim': (0, 100), 
+            'title': title,
+            'font_size_legend': 10
+        }
+        
+        self._plotDrawSave(prec_curve, threshold_set_center, prec_score, tracker_names, self._getPlotDrawStyles(), precision_plot_opts, save_path)

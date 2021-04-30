@@ -4,7 +4,7 @@ This repository 360Tracking has been created as the part of master thesis at  [B
 
 ## Improvements of Single Object Tracking (SOT) in 360° video
 
-Ordinary trackers can fail or produce false positive results when tracking in equirectangular projection of 360° videos. The reasons of failures could be similar as in ordinary videos with limited field of view (e.g. occlusion). Although there might be other problems be caused by equirectangular distortion. Moreover in equirectangular panorama the tracked object can cross horizontal borders of equirectangular frame. You could see how the state-of-the-art tracker [KYS](https://github.com/visionml/pytracking) generates false positives and fails below.
+Ordinary trackers can fail or produce false positive results when tracking in equirectangular projection of 360° videos. The reasons of failures could be similar as in ordinary videos with limited field of view (e.g. occlusion). Although there might be other problems caused by equirectangular distortion. Moreover in equirectangular panorama the tracked object can cross horizontal borders of equirectangular frame. You could see how the state-of-the-art tracker [KYS](https://github.com/visionml/pytracking) generates false positives and fails below.
 
 <p align="center">
     <img src="./code/.fig/kys_default.gif" alt="kys_default"  />
@@ -123,9 +123,11 @@ The custom improvements of Single Object Tracking in equirectangular projection 
 
 ### Results
 
-These 12 trackers have been evaluated for the custom dataset mentioned above. You may notice the success plots based on Intersection over Union (IoU) metric with AUC values in legend. DEFAULT plot displays tracker results without any improvement, BORDER plot displays "frame shift approach" results and finally NFOV plot displays trackers results from normal field of view (rectilinear) approach.
+These 12 trackers have been evaluated for the custom dataset mentioned above. You may notice the success plots based on Intersection over Union (IoU) metric with AUC values in legend and precision plots based on center error distance. DEFAULT plots display tracker results without any improvement, BORDER plots display "frame shift approach" results and finally NFOV plots display trackers results from normal field of view (rectilinear) approach.
 
 <img src="./code/.fig/success_plots.png" alt="success_plots"  />
+
+<img src="./code/.fig/precision_plots.png" alt="success_plots"  />
 
 
 

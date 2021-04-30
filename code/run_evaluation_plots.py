@@ -44,6 +44,10 @@ if __name__ == '__main__':
         elif args["tracker"] and args["allsequences"]:
             evaluation.createSuccessPlotAllSequences(tracker=args["tracker"])
             # evaluation.createSuccessPlotAllSequencesVariance(tracker=args["tracker"])
+        elif args["alltrackers"] and args["number"]:
+            evaluation.createSuccessPlotAllTrackersSequence(seq_number=args["number"], default=True)
+            evaluation.createSuccessPlotAllTrackersSequence(seq_number=args["number"], border=True)
+            evaluation.createSuccessPlotAllTrackersSequence(seq_number=args["number"], nfov=True)
         elif args["alltrackers"]:
             evaluation.createSuccessPlotAllTrackers(default=True)
             evaluation.createSuccessPlotAllTrackers(border=True)
@@ -52,5 +56,18 @@ if __name__ == '__main__':
             print("Invalid combination of arguments, run: 'python run_evaluation_plots --help")
             sys.exit(-1)
     elif args["precision"]:
-        print("Yea - precision")
-    # TODO treshold
+        if args["tracker"] and args["number"]:
+            evaluation.createPrecisionPlot(tracker=args["tracker"], seq_number=args["number"])
+        elif args["tracker"] and args["allsequences"]:
+            evaluation.createPrecisionPlotAllSequences(tracker=args["tracker"])
+        elif args["alltrackers"] and args["number"]:
+            evaluation.createPrecisionPlotAllTrackersSequence(seq_number=args["number"], default=True)
+            evaluation.createPrecisionPlotAllTrackersSequence(seq_number=args["number"], border=True)
+            evaluation.createPrecisionPlotAllTrackersSequence(seq_number=args["number"], nfov=True)
+        elif args["alltrackers"]:
+            evaluation.createPrecisionPlotAllTrackers(default=True)
+            evaluation.createPrecisionPlotAllTrackers(border=True)
+            evaluation.createPrecisionPlotAllTrackers(nfov=True)
+        else:
+            print("Invalid combination of arguments, run: 'python run_evaluation_plots --help")
+            sys.exit(-1)
