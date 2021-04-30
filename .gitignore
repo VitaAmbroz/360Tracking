@@ -23,8 +23,7 @@
 /code/.fig/*.mp4
 /code/.fig/*.mov
 
+
 # ignore computed metrics
 /code/annotation/dataset-demo/demo-result/*-iou.txt
-/code/annotation/results/*/*/*-iou.txt
-/code/annotation/results/**/*-iou.txt
 *-iou.txt
