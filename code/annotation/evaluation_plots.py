@@ -18,8 +18,10 @@
 import sys
 import glob
 import os
+import tikzplotlib
 import matplotlib
 import matplotlib.pyplot as plt
+from matplotlib.ticker import MaxNLocator
 import numpy as np
 import torch
 
@@ -37,9 +39,15 @@ class EvaluationPlots:
         self.PATH_CENTER_ERROR_BORDER = "annotation/results/<TRACKER>/<NUMBER>/<NUMBER>-result-border-centererror.txt"
         self.PATH_CENTER_ERROR_NFOV = "annotation/results/<TRACKER>/<NUMBER>/<NUMBER>-result-nfov-centererror.txt"
 
-        # constants of trackers names and dataset sequences
+        # constants of trackers names
         self.TRACKERS = ["ECO","ATOM","DiMP","KYS","DaSiamRPN","Ocean","SiamDW","CSRT","MEDIANFLOW","KCF","MIL","TLD"]
+        # constant of whole dataset with total 21 sequences
         self.DATASET = ["01","02","03","04","05","06","07","08","09","10","11","12","13","14","15","16","17","18","19","20","21"]
+
+        # constant of whole dataset with total 13 sequences where object crosses equirectangular border
+        self.DATASET_CROSSING_BORDER = ["01","02","03","04","08","11","12","13","14","15","16","18","21"]
+        # constant of whole dataset with total 8 sequences where object does not crosses equirectangular border
+        self.DATASET_NOT_CROSSING_BORDER = ["05","06","07","09","10","17","19","20"]
 
         # paths for result plots in .pdf
         self.PATH_SUCCESS_PLOT = "annotation/results/<TRACKER>/<NUMBER>/<NUMBER>-success-plot"
@@ -50,6 +58,7 @@ class EvaluationPlots:
 
         self.PATH_PRECISION_PLOT = "annotation/results/<TRACKER>/<NUMBER>/<NUMBER>-precision-plot"
         self.PATH_PRECISION_PLOT_ALLSEQUENCES = "annotation/results/total-precision/<TRACKER>-precision-plot"
+        self.PATH_PRECISION_PLOT_ALLSEQUENCES_VAR = "annotation/results/total-precision/<TRACKER>-precision-plot-variance"
         self.PATH_PRECISION_PLOT_ALLTRACKERS = "annotation/results/total-precision/all-trackers-precision-plot"
         self.PATH_PRECISION_PLOT_ALLTRACKERS_SEQ = "annotation/results/total-precision/all-trackers/<NUMBER>-trackers-precision-plot"
 
@@ -109,6 +118,10 @@ class EvaluationPlots:
         ylabel = plot_opts['ylabel']
         xlim = plot_opts['xlim']
         ylim = plot_opts['ylim']
+        
+        xticks = plot_opts.get('xticks', None)
+        xticks_string = plot_opts.get('xticks_string', None)
+        yticks = plot_opts.get('yticks', None)
 
         title = plot_opts['title']
 
@@ -121,12 +134,11 @@ class EvaluationPlots:
 
         # possible sort according to best auc
         index_sort = scores.argsort(descending=False)
-        # index_sort = torch.Tensor([0,1,2])
 
         plotted_lines = []
         legend_text = []
 
-        for id, id_sort in enumerate(index_sort):
+        for _, id_sort in enumerate(index_sort):
             # line = ax.plot(x.tolist(), y[id_sort, :].tolist(), linewidth=line_width, color=plot_draw_styles[index_sort.numel() - id - 1]['color'], linestyle=plot_draw_styles[index_sort.numel() - id - 1]['line_style'])
             line = ax.plot(x.tolist(), y[id_sort, :].tolist(), linewidth=line_width, color=plot_draw_styles[id_sort.item()]['color'], linestyle=plot_draw_styles[id_sort.item()]['line_style'])
 
@@ -145,7 +157,18 @@ class EvaluationPlots:
         ax.grid(True, linestyle='-.')
         fig.tight_layout()
 
-        # tikzplotlib.save('{}/{}_plot.tex'.format(result_plot_path, plot_type))
+        # hard define ticks
+        if xticks and xticks_string and yticks:
+            plt.xticks(xticks, xticks_string)
+            plt.yticks(yticks)
+
+        # save tex 
+        # tex_path = save_path + ".tex"
+        # tikzplotlib.save(tex_path)
+        # save eps
+        # eps_path = save_path + ".eps"
+        # fig.savefig(eps_path, dpi=300, format='eps', transparent=True)
+        # save pdf
         pdf_path = save_path + ".pdf"
         fig.savefig(pdf_path, dpi=300, format='pdf', transparent=True)
         plt.draw()
@@ -190,9 +213,6 @@ class EvaluationPlots:
             # concatenate to tensor list
             auc = torch.Tensor([auc1, auc2, auc3])
 
-            print(auc_curve)
-            print(auc)
-
             success_plot_opts = {
                 'plot_type': 'success', 
                 'legend_loc': 'lower left', 
@@ -200,7 +220,10 @@ class EvaluationPlots:
                 'ylabel': 'Overlap Precision [%]', 
                 'xlim': (0, 1.0), 'ylim': (0, 100), 
                 'title': 'Success plot - ' + tracker,
-                'font_size_legend': 11
+                'font_size_legend': 11,
+                'xticks': [0.0, 0.2, 0.4, 0.6, 0.8, 1.0],
+                'xticks_string': ['0', '0.2', '0.4', '0.6', '0.8', '1.0'],
+                'yticks': [20, 40, 60, 80, 100]
             }
             
             # tracker(modified) names of lines in plot
@@ -242,13 +265,18 @@ class EvaluationPlots:
 
         success_plot_opts = {
             'plot_type': 'success', 
-            'legend_loc': 'upper right', 
+            # 'legend_loc': 'upper right',
+            'legend_loc': 'lower left',
             'xlabel': 'Overlap threshold',
             'ylabel': 'Overlap Precision [%]', 
             'xlim': (0, 1.0), 'ylim': (0, 100), 
             'title': 'Success plot - ' + tracker,
-            'font_size_legend': 12,
-            'bbox_to_anchor': (1.1, 1.0)
+            'font_size_legend': 16,
+            'font_size_axis': 16,
+            'font_size': 16,
+            'xticks': [0.0, 0.2, 0.4, 0.6, 0.8, 1.0],
+            'xticks_string': ['0', '0.2', '0.4', '0.6', '0.8', '1.0'],
+            'yticks': [20, 40, 60, 80, 100]
         }
         
         # tracker(modified) names of lines in plot
@@ -312,20 +340,31 @@ class EvaluationPlots:
             'xlim': (0, 1.0), 'ylim': (0, 100), 
             'title': title + " (Sequence " + seq_number + ")",
             'font_size_legend': 10,
-            'bbox_to_anchor': (1.25, 1.0)
+            'bbox_to_anchor': (1.25, 1.0),
+            'xticks': [0.0, 0.2, 0.4, 0.6, 0.8, 1.0],
+            'xticks_string': ['0', '0.2', '0.4', '0.6', '0.8', '1.0'],
+            'yticks': [20, 40, 60, 80, 100]
         }
         
         self._plotDrawSave(auc_curve, threshold_set_overlap, auc, tracker_names, self._getPlotDrawStyles(), success_plot_opts, save_path)
 
 
-    def createSuccessPlotAllTrackers(self, default=False, border=False, nfov=False):
+    def createSuccessPlotAllTrackers(self, default=False, border=False, nfov=False, onlyBorderCrossing=False, onlyNotBorderCrossing=False):
         """Draws and saves success plot for all trackers (default/border/nfov) and all 01-21 video sequences in dataset"""
+        dataset = self.DATASET
+        save_path = self.PATH_SUCCESS_PLOT_ALLTRACKERS
+        if onlyBorderCrossing:
+            dataset = self.DATASET_CROSSING_BORDER
+            save_path = self.PATH_SUCCESS_PLOT_ALLTRACKERS + "-crossing"
+        if onlyNotBorderCrossing:
+            dataset = self.DATASET_NOT_CROSSING_BORDER
+            save_path = self.PATH_SUCCESS_PLOT_ALLTRACKERS + "-not-crossing"
+
         plot_bin_gap = 0.05
         threshold_set_overlap = torch.arange(0.0, 1.0 + plot_bin_gap, plot_bin_gap, dtype=torch.float64)
-        ave_success_rate_plot_overlap = torch.zeros((len(self.DATASET), len(self.TRACKERS), threshold_set_overlap.numel()), dtype=torch.float32)
+        ave_success_rate_plot_overlap = torch.zeros((len(dataset), len(self.TRACKERS), threshold_set_overlap.numel()), dtype=torch.float32)
 
         path = ""
-        save_path = self.PATH_SUCCESS_PLOT_ALLTRACKERS
         tracker_names = self.TRACKERS
         title = "Success plot"
         if default:
@@ -341,10 +380,10 @@ class EvaluationPlots:
             save_path += "-nfov"
             title += " - NFOV"
 
-        for i in range(len(self.DATASET)):
+        for i in range(len(dataset)):
             for j in range(len(self.TRACKERS)):
                 # load and parse data
-                current_path = path.replace("<TRACKER>", self.TRACKERS[j]).replace("<NUMBER>", self.DATASET[i])
+                current_path = path.replace("<TRACKER>", self.TRACKERS[j]).replace("<NUMBER>", dataset[i])
                 iou = self._parseGivenDataFile(current_path)
 
                 # transform python lists to tensors
@@ -365,7 +404,10 @@ class EvaluationPlots:
             'xlim': (0, 1.0), 'ylim': (0, 100), 
             'title': title,
             'font_size_legend': 10,
-            'bbox_to_anchor': (1.25, 1.0)
+            'bbox_to_anchor': (1.25, 1.0),
+            'xticks': [0.0, 0.2, 0.4, 0.6, 0.8, 1.0],
+            'xticks_string': ['0', '0.2', '0.4', '0.6', '0.8', '1.0'],
+            'yticks': [20, 40, 60, 80, 100]
         }
         
         self._plotDrawSave(auc_curve, threshold_set_overlap, auc, tracker_names, self._getPlotDrawStyles(), success_plot_opts, save_path)
@@ -374,7 +416,7 @@ class EvaluationPlots:
     def createSuccessPlotAllSequencesVariance(self, tracker: str):
         """Draws and saves success plot for given tracker and all 01-21 video sequences in dataset with variance min and max"""
         plot_bin_gap = 0.05
-        threshold_set_overlap = torch.arange(0.0, 1.0 + plot_bin_gap, plot_bin_gap, dtype=torch.float64)
+        threshold_set_overlap = torch.arange(0, 1.0 + plot_bin_gap, plot_bin_gap, dtype=torch.float64)
         ave_success_rate_plot_overlap = torch.zeros((len(self.DATASET), 3, threshold_set_overlap.numel()), dtype=torch.float32)
 
         for i in range(len(self.DATASET)):
@@ -407,25 +449,35 @@ class EvaluationPlots:
         min_curve = ave_success_rate_plot_overlap.min(0).values * 100.0
 
         # tracker(modified) names of lines in plot
-        tracker_names = [tracker+"-DEFAULT", tracker+"-BORDER", tracker+"-NFOV"]
+        tracker_names = ["DEFAULT", "BORDER", "NFOV"]
         
-        font_size = 12
-        font_size_axis = 12
-        line_width = 2
-        font_size_legend = 11
-        bbox_to_anchor = (1.25, 1.0)
-        plot_type = 'success'
+        # tech report pdf bigger size
+        # font_size = 16
+        # font_size_axis = 16
+        # font_size_label = 18
+        # font_size_legend = 16
+        font_size = 13
+        font_size_axis = 13
+        font_size_label = 14
+        font_size_legend = 13
+        # tech report pdf bigger size
+        # bbox_to_anchor = (1.25, 1.0)
+        bbox_to_anchor = None
+        line_width = 3
         legend_loc = 'upper right'
         xlabel = 'Overlap threshold'
         ylabel = 'Overlap Precision [%]'
         xlim = (0, 1.0)
         ylim = (0, 100)
+        xticks = [0.0, 0.2, 0.4, 0.6, 0.8, 1.0]
+        xticks_string = ['0', '0.2', '0.4', '0.6', '0.8', '1.0']
+        yticks = [20, 40, 60, 80, 100]
         title = 'Success plot - ' + tracker
 
         matplotlib.rcParams.update({'font.size': font_size})
         matplotlib.rcParams.update({'axes.titlesize': font_size_axis})
         matplotlib.rcParams.update({'axes.titleweight': 'black'})
-        matplotlib.rcParams.update({'axes.labelsize': font_size_axis})
+        matplotlib.rcParams.update({'axes.labelsize': font_size_label})
 
         fig, ax = plt.subplots()
         # possible sort according to best auc
@@ -436,28 +488,30 @@ class EvaluationPlots:
 
         plot_draw_styles = self._getPlotDrawStyles()
 
-        # tracker variance
-        for id, id_sort in enumerate(index_sort):
-            disp_name = tracker_names[id_sort]
-            legend_text.append(disp_name + " variance")
-
-            line = ax.plot(threshold_set_overlap.tolist(), max_curve[id_sort, :].tolist(), linewidth=line_width, color=plot_draw_styles[id_sort.item()]['color'], linestyle='--')
-            plotted_lines.append(line[0])
-            line = ax.plot(threshold_set_overlap.tolist(), min_curve[id_sort, :].tolist(), linewidth=line_width, color=plot_draw_styles[id_sort.item()]['color'], linestyle='--')
-        # trackers
-        for id, id_sort in enumerate(index_sort):
+        # draw lines and background
+        for _, id_sort in enumerate(index_sort):
             disp_name = tracker_names[id_sort]
             legend_text.append('{} [{:.1f}]'.format(disp_name, auc[id_sort]))
             
+            # draw mean line
             line = ax.plot(threshold_set_overlap.tolist(), auc_curve[id_sort, :].tolist(), linewidth=line_width, color=plot_draw_styles[id_sort.item()]['color'], linestyle='-')
             plotted_lines.append(line[0])
+            # draw min and max lines
+            ax.plot(threshold_set_overlap.tolist(), max_curve[id_sort, :].tolist(), linewidth=1, color=plot_draw_styles[id_sort.item()]['color'], linestyle='--')
+            ax.plot(threshold_set_overlap.tolist(), min_curve[id_sort, :].tolist(), linewidth=1, color=plot_draw_styles[id_sort.item()]['color'], linestyle='--')
 
+            # show light background as variance
+            ax.fill_between(threshold_set_overlap.tolist(), min_curve[id_sort, :].tolist(), max_curve[id_sort, :].tolist(), color=plot_draw_styles[id_sort.item()]['color'], alpha=0.15)
 
 
         ax.legend(plotted_lines[::-1], legend_text[::-1], loc=legend_loc, bbox_to_anchor=bbox_to_anchor, fancybox=False, edgecolor='black', fontsize=font_size_legend, framealpha=1.0)
         ax.set(xlabel=xlabel, ylabel=ylabel, xlim=xlim, ylim=ylim, title=title)
         ax.grid(True, linestyle='-.')
         fig.tight_layout()
+
+        # hard define ticks
+        plt.xticks(xticks, xticks_string)
+        plt.yticks(yticks)
 
         # tikzplotlib.save('{}/{}_plot.tex'.format(result_plot_path, plot_type))
         self.PATH_SUCCESS_PLOT_ALLSEQUENCES_VAR = self.PATH_SUCCESS_PLOT_ALLSEQUENCES_VAR.replace("<TRACKER>", tracker)
@@ -504,12 +558,15 @@ class EvaluationPlots:
 
             precision_plot_opts = {
                 'plot_type': 'precision', 
-                'legend_loc': 'lower left', 
+                'legend_loc': 'lower right', 
                 'xlabel': 'Location error threshold [pixels]',
                 'ylabel': 'Distance Precision [%]', 
                 'xlim': (0, 50), 'ylim': (0, 100), 
                 'title': 'Precision plot - ' + tracker,
-                'font_size_legend': 11
+                'font_size_legend': 11,
+                'xticks': [0, 10, 20, 30, 40, 50],
+                'xticks_string': ['0', '10', '20', '30', '40', '50'],
+                'yticks': [20, 40, 60, 80, 100]
             }
             
             # tracker(modified) names of lines in plot
@@ -539,7 +596,7 @@ class EvaluationPlots:
             cerror_border_tensor = torch.Tensor(cerror_border)
             cerror_nfov_tensor = torch.Tensor(cerror_nfov)
 
-            # success computing
+            # precision computing
             ave_success_rate_plot_center[i,0,:] = (cerror_default_tensor.view(-1, 1) <= threshold_set_center.view(1, -1)).sum(0).float() / len(cerror_default)
             ave_success_rate_plot_center[i,1,:] = (cerror_border_tensor.view(-1, 1) <= threshold_set_center.view(1, -1)).sum(0).float() / len(cerror_border)
             ave_success_rate_plot_center[i,2,:] = (cerror_nfov_tensor.view(-1, 1) <= threshold_set_center.view(1, -1)).sum(0).float() / len(cerror_nfov)
@@ -556,7 +613,12 @@ class EvaluationPlots:
             'ylabel': 'Distance Precision [%]', 
             'xlim': (0, 50), 'ylim': (0, 100), 
             'title': 'Precision plot - ' + tracker,
-            'font_size_legend': 11
+            'font_size_legend': 16,
+            'font_size_axis': 16,
+            'font_size': 16,
+            'xticks': [0, 10, 20, 30, 40, 50],
+            'xticks_string': ['0', '10', '20', '30', '40', '50'],
+            'yticks': [20, 40, 60, 80, 100]
         }
         
         # tracker(modified) names of lines in plot
@@ -611,19 +673,30 @@ class EvaluationPlots:
             'ylabel': 'Distance Precision [%]', 
             'xlim': (0, 50), 'ylim': (0, 100), 
             'title': title + " (Sequence " + seq_number + ")",
-            'font_size_legend': 10
+            'font_size_legend': 11,
+            'xticks': [0, 10, 20, 30, 40, 50],
+            'xticks_string': ['0', '10', '20', '30', '40', '50'],
+            'yticks': [20, 40, 60, 80, 100]
         }
         
         self._plotDrawSave(prec_curve, threshold_set_center, prec_score, tracker_names, self._getPlotDrawStyles(), precision_plot_opts, save_path)
 
 
-    def createPrecisionPlotAllTrackers(self, default=False, border=False, nfov=False):
-        """Draws and saves success plot for all trackers (default/border/nfov) and all 01-21 video sequences in dataset"""
+    def createPrecisionPlotAllTrackers(self, default=False, border=False, nfov=False, onlyBorderCrossing=False, onlyNotBorderCrossing=False):
+        """Draws and saves precision plot for all trackers (default/border/nfov) and all 01-21 video sequences in dataset"""
+        dataset = self.DATASET
+        save_path = self.PATH_PRECISION_PLOT_ALLTRACKERS
+        if onlyBorderCrossing:
+            dataset = self.DATASET_CROSSING_BORDER
+            save_path = save_path + "-crossing"
+        if onlyNotBorderCrossing:
+            dataset = self.DATASET_NOT_CROSSING_BORDER
+            save_path = save_path + "-not-crossing"
+        
         threshold_set_center = torch.arange(0, 51, dtype=torch.float64)
-        ave_success_rate_plot_center = torch.zeros((len(self.DATASET), len(self.TRACKERS), threshold_set_center.numel()), dtype=torch.float32)
+        ave_success_rate_plot_center = torch.zeros((len(dataset), len(self.TRACKERS), threshold_set_center.numel()), dtype=torch.float32)
 
         path = ""
-        save_path = self.PATH_PRECISION_PLOT_ALLTRACKERS
         tracker_names = self.TRACKERS
         title = "Precision plot"
         if default:
@@ -639,10 +712,10 @@ class EvaluationPlots:
             save_path += "-nfov"
             title += " - NFOV"
 
-        for i in range(len(self.DATASET)):
+        for i in range(len(dataset)):
             for j in range(len(self.TRACKERS)):
                 # load and parse data
-                current_path = path.replace("<TRACKER>", self.TRACKERS[j]).replace("<NUMBER>", self.DATASET[i])
+                current_path = path.replace("<TRACKER>", self.TRACKERS[j]).replace("<NUMBER>", dataset[i])
                 cerror = self._parseGivenDataFile(current_path)
 
                 # transform python lists to tensors
@@ -663,7 +736,117 @@ class EvaluationPlots:
             'ylabel': 'Distance Precision [%]', 
             'xlim': (0, 50), 'ylim': (0, 100), 
             'title': title,
-            'font_size_legend': 10
+            'font_size_legend': 11,
+            'xticks': [0, 10, 20, 30, 40, 50],
+            'xticks_string': ['0', '10', '20', '30', '40', '50'],
+            'yticks': [20, 40, 60, 80, 100]
         }
         
         self._plotDrawSave(prec_curve, threshold_set_center, prec_score, tracker_names, self._getPlotDrawStyles(), precision_plot_opts, save_path)
+
+
+    def createPrecisionPlotAllSequencesVariance(self, tracker: str):
+        """Draws and saves precision plot for given tracker and all 01-21 video sequences in dataset with variance min and max"""
+        threshold_set_center = torch.arange(0, 51, dtype=torch.float64)
+        ave_success_rate_plot_center = torch.zeros((len(self.DATASET), 3, threshold_set_center.numel()), dtype=torch.float32)
+
+        for i in range(len(self.DATASET)):
+            # load and parse data
+            path_default = self.PATH_CENTER_ERROR_DEFAULT.replace("<TRACKER>", tracker).replace("<NUMBER>", self.DATASET[i])
+            path_border = self.PATH_CENTER_ERROR_BORDER.replace("<TRACKER>", tracker).replace("<NUMBER>", self.DATASET[i])
+            path_nfov = self.PATH_CENTER_ERROR_NFOV.replace("<TRACKER>", tracker).replace("<NUMBER>", self.DATASET[i])
+
+            cerror_default = self._parseGivenDataFile(path_default)
+            cerror_border = self._parseGivenDataFile(path_border)
+            cerror_nfov = self._parseGivenDataFile(path_nfov)
+
+            # transform python lists to tensors
+            cerror_default_tensor = torch.Tensor(cerror_default)
+            cerror_border_tensor = torch.Tensor(cerror_border)
+            cerror_nfov_tensor = torch.Tensor(cerror_nfov)
+
+            # precision computing
+            ave_success_rate_plot_center[i,0,:] = (cerror_default_tensor.view(-1, 1) <= threshold_set_center.view(1, -1)).sum(0).float() / len(cerror_default)
+            ave_success_rate_plot_center[i,1,:] = (cerror_border_tensor.view(-1, 1) <= threshold_set_center.view(1, -1)).sum(0).float() / len(cerror_border)
+            ave_success_rate_plot_center[i,2,:] = (cerror_nfov_tensor.view(-1, 1) <= threshold_set_center.view(1, -1)).sum(0).float() / len(cerror_nfov)
+
+
+        # create curves
+        prec_curve = ave_success_rate_plot_center.mean(0) * 100.0
+        # score should be counted for max 20 pixel error
+        prec_score = prec_curve[:, 20]
+        # maximum in tensors
+        max_curve = ave_success_rate_plot_center.max(0).values * 100.0
+        # minimim in tensors
+        min_curve = ave_success_rate_plot_center.min(0).values * 100.0
+
+        # tracker(modified) names of lines in plot
+        tracker_names = ["DEFAULT", "BORDER", "NFOV"]
+        
+        # tech report bigger size
+        # font_size = 16
+        # font_size_axis = 16
+        # font_size_label = 18
+        # font_size_legend = 16
+        font_size = 13
+        font_size_axis = 13
+        font_size_label = 14
+        font_size_legend = 13
+        line_width = 3
+        # tech report bigger size
+        # bbox_to_anchor = (1.25, 0.0)
+        bbox_to_anchor = None
+        legend_loc = 'lower right'
+        xlabel = 'Location error threshold [pixels]'
+        ylabel = 'Distance Precision [%]'
+        xlim = (0, 50)
+        ylim = (0, 100)
+        xticks = [0, 10, 20, 30, 40, 50]
+        yticks = [20, 40, 60, 80, 100]
+        title = 'Precision plot - ' + tracker
+
+        matplotlib.rcParams.update({'font.size': font_size})
+        matplotlib.rcParams.update({'axes.titlesize': font_size_axis})
+        matplotlib.rcParams.update({'axes.titleweight': 'black'})
+        matplotlib.rcParams.update({'axes.labelsize': font_size_label})
+
+        fig, ax = plt.subplots()
+        # possible sort according to best auc
+        index_sort = prec_score.argsort(descending=False)
+
+        plotted_lines = []
+        legend_text = []
+
+        plot_draw_styles = self._getPlotDrawStyles()
+
+        # draw lines and background
+        for _, id_sort in enumerate(index_sort):
+            disp_name = tracker_names[id_sort]
+            legend_text.append('{} [{:.1f}]'.format(disp_name, prec_score[id_sort]))
+            
+            # draw mean line
+            line = ax.plot(threshold_set_center.tolist(), prec_curve[id_sort, :].tolist(), linewidth=line_width, color=plot_draw_styles[id_sort.item()]['color'], linestyle='-')
+            plotted_lines.append(line[0])
+            # draw min and max lines
+            ax.plot(threshold_set_center.tolist(), max_curve[id_sort, :].tolist(), linewidth=1, color=plot_draw_styles[id_sort.item()]['color'], linestyle='--')
+            ax.plot(threshold_set_center.tolist(), min_curve[id_sort, :].tolist(), linewidth=1, color=plot_draw_styles[id_sort.item()]['color'], linestyle='--')
+
+            # show light background as variance
+            ax.fill_between(threshold_set_center.tolist(), min_curve[id_sort, :].tolist(), max_curve[id_sort, :].tolist(), color=plot_draw_styles[id_sort.item()]['color'], alpha=0.15)
+
+
+        ax.legend(plotted_lines[::-1], legend_text[::-1], loc=legend_loc, bbox_to_anchor=bbox_to_anchor, fancybox=False, edgecolor='black', fontsize=font_size_legend, framealpha=1.0)
+        ax.set(xlabel=xlabel, ylabel=ylabel, xlim=xlim, ylim=ylim, title=title)
+        ax.grid(True, linestyle='-.')
+        fig.tight_layout()
+
+        # hard define ticks
+        plt.xticks(xticks)
+        plt.yticks(yticks)
+
+        self.PATH_PRECISION_PLOT_ALLSEQUENCES_VAR = self.PATH_PRECISION_PLOT_ALLSEQUENCES_VAR.replace("<TRACKER>", tracker)
+        pdf_path = self.PATH_PRECISION_PLOT_ALLSEQUENCES_VAR + ".pdf"
+        fig.savefig(pdf_path, dpi=300, format='pdf', transparent=True)
+        plt.draw()
+        print("File " + pdf_path + " has been created.")
+        # plt.show()

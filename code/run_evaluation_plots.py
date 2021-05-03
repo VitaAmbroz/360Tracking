@@ -42,8 +42,10 @@ if __name__ == '__main__':
         if args["tracker"] and args["number"]:
             evaluation.createSuccessPlot(tracker=args["tracker"], seq_number=args["number"])
         elif args["tracker"] and args["allsequences"]:
-            evaluation.createSuccessPlotAllSequences(tracker=args["tracker"])
-            # evaluation.createSuccessPlotAllSequencesVariance(tracker=args["tracker"])
+            # success plot without variance background
+            # evaluation.createSuccessPlotAllSequences(tracker=args["tracker"])
+            # success plot with variance background
+            evaluation.createSuccessPlotAllSequencesVariance(tracker=args["tracker"])
         elif args["alltrackers"] and args["number"]:
             evaluation.createSuccessPlotAllTrackersSequence(seq_number=args["number"], default=True)
             evaluation.createSuccessPlotAllTrackersSequence(seq_number=args["number"], border=True)
@@ -52,6 +54,14 @@ if __name__ == '__main__':
             evaluation.createSuccessPlotAllTrackers(default=True)
             evaluation.createSuccessPlotAllTrackers(border=True)
             evaluation.createSuccessPlotAllTrackers(nfov=True)
+            # all trackers for dataset sequences where the object crosses border
+            evaluation.createSuccessPlotAllTrackers(default=True, onlyBorderCrossing=True)
+            evaluation.createSuccessPlotAllTrackers(border=True, onlyBorderCrossing=True)
+            evaluation.createSuccessPlotAllTrackers(nfov=True, onlyBorderCrossing=True)
+            # all trackers for dataset sequences where the object does not cross border
+            evaluation.createSuccessPlotAllTrackers(default=True, onlyNotBorderCrossing=True)
+            evaluation.createSuccessPlotAllTrackers(border=True, onlyNotBorderCrossing=True)
+            evaluation.createSuccessPlotAllTrackers(nfov=True, onlyNotBorderCrossing=True)
         else:
             print("Invalid combination of arguments, run: 'python run_evaluation_plots --help")
             sys.exit(-1)
@@ -59,7 +69,10 @@ if __name__ == '__main__':
         if args["tracker"] and args["number"]:
             evaluation.createPrecisionPlot(tracker=args["tracker"], seq_number=args["number"])
         elif args["tracker"] and args["allsequences"]:
-            evaluation.createPrecisionPlotAllSequences(tracker=args["tracker"])
+            # precision plot without variance background
+            # evaluation.createPrecisionPlotAllSequences(tracker=args["tracker"])
+            # precision plot with variance background
+            evaluation.createPrecisionPlotAllSequencesVariance(tracker=args["tracker"])
         elif args["alltrackers"] and args["number"]:
             evaluation.createPrecisionPlotAllTrackersSequence(seq_number=args["number"], default=True)
             evaluation.createPrecisionPlotAllTrackersSequence(seq_number=args["number"], border=True)
@@ -68,6 +81,14 @@ if __name__ == '__main__':
             evaluation.createPrecisionPlotAllTrackers(default=True)
             evaluation.createPrecisionPlotAllTrackers(border=True)
             evaluation.createPrecisionPlotAllTrackers(nfov=True)
+            # all trackers for dataset sequences where the object crosses border
+            evaluation.createPrecisionPlotAllTrackers(default=True, onlyBorderCrossing=True)
+            evaluation.createPrecisionPlotAllTrackers(border=True, onlyBorderCrossing=True)
+            evaluation.createPrecisionPlotAllTrackers(nfov=True, onlyBorderCrossing=True)
+            # all trackers for dataset sequences where the object does not cross border
+            evaluation.createPrecisionPlotAllTrackers(default=True, onlyNotBorderCrossing=True)
+            evaluation.createPrecisionPlotAllTrackers(border=True, onlyNotBorderCrossing=True)
+            evaluation.createPrecisionPlotAllTrackers(nfov=True, onlyNotBorderCrossing=True)
         else:
             print("Invalid combination of arguments, run: 'python run_evaluation_plots --help")
             sys.exit(-1)
