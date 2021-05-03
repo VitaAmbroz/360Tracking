@@ -1,3 +1,34 @@
 #!/bin/sh
 
+## Tested on Windows 10 with this versions
+
+# pip install opencv-contrib-python==4.4.0.46
+# pip install "matplotlib>=3.3.4"
+# pip install "numpy>=1.20.1"
+# pip install "torch>=1.8.1"
+
+
+# Tested on Ubuntu 18.04 with this versions
+
+echo "************ Installing opencv-contrib-python *************"
+# last opencv-contrib-python release 4.5.1.48 raises errors for some trackers...
 pip install opencv-contrib-python==4.4.0.46
+echo ""
+echo ""
+
+echo "****************** Installing matplotlib ******************"
+pip install "matplotlib>=3.2.2"
+echo ""
+echo ""
+
+echo "****************** Installing numpy ***********************"
+pip install "numpy>=1.18.5"
+echo ""
+echo ""
+
+echo "****************** Installing torch ***********************"
+pip install "torch>=1.7.0"
+echo ""
+echo ""
+
+echo "**************** Installation completed! ******************"
