@@ -185,9 +185,11 @@ git submodule update --init
   -> Follow the instructions [here](./code/modified_pytracking/README.md) (see also modified [code](./code/modified_pytracking/))
 
 - To enable DaSiamRPN tracker ([DaSiamRPN](https://github.com/foolwood/DaSiamRPN))
+  
   -> Follow the instructions [here](./code/modified_DaSiamRPN/README.md) (see also modified [code](./code/modified_DaSiamRPN/))
 
 - To enable SiamDW and Ocean trackers ([TracKit](https://github.com/researchmm/TracKit))
+  
   -> Follow the instructions [here](./code/modified_TracKit/README.md) (see also modified [code](./code/modified_TracKit/))
 
   
