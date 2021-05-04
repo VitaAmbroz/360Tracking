@@ -6,7 +6,7 @@ First make sure that you had cloned the original repository.
 git submodule update --init  
 ```
 
-Then you should copy the necessary modified files and download pretrained networks. You could use the [script](./code/script_modify_TracKit.sh) in "360Tracking/code/" directory.
+Then you should copy the necessary modified files and download pretrained networks. You could use the script in "360Tracking/code/" directory.
 
 ```
 $360Tracking/code/
