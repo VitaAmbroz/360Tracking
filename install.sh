@@ -1,6 +1,6 @@
 #!/bin/sh
 
-## Tested on Windows 10 with this versions
+## Tested on Windows 10 with python 3.9.4 and following package versions
 
 # pip install opencv-contrib-python==4.4.0.46
 # pip install "matplotlib>=3.3.4"
@@ -8,7 +8,7 @@
 # pip install "torch>=1.8.1"
 
 
-# Tested on Ubuntu 18.04 with this versions
+# Tested on Ubuntu 18.04 with python 3.8.3 and following package versions
 
 echo "************ Installing opencv-contrib-python *************"
 # last opencv-contrib-python release 4.5.1.48 raises errors for some trackers...

@@ -4,7 +4,7 @@ This repository 360Tracking has been created as the part of master thesis at  [B
 
 ## Improvements of Single Object Tracking (SOT) in 360° video
 
-Ordinary trackers can fail or produce false positive results when tracking in equirectangular projection of 360° videos. The reasons of failures could be similar as in ordinary videos with limited field of view (e.g. occlusion). Although there might be other problems caused by equirectangular distortion. Moreover in equirectangular panorama the tracked object can cross horizontal borders of equirectangular frame. You could see how the state-of-the-art tracker [KYS](https://github.com/visionml/pytracking) generates false positives and fails below.
+Ordinary trackers can fail or produce false positive results when tracking in equirectangular projection of 360° videos. The reasons of failures could be similar as in ordinary videos with limited field of view (e.g. occlusion). Although there might be other problems caused by equirectangular distortion. Moreover in equirectangular panorama the tracked object can cross horizontal borders of equirectangular frame. You could see how the state-of-the-art tracker [KYS](https://github.com/visionml/pytracking) generates false positive results and fails below.
 
 <p align="center">
     <img src="./code/.fig/kys_default.gif" alt="kys_default"  />
@@ -32,15 +32,15 @@ The second approach could improve tracking process in very distorted areas in eq
 
 ## Evaluation
 
-We have evaluated 12 trackers for manually created dataset composed of 21 equirectangular videos...
+We have evaluated 12 trackers for manually created dataset composed of 21 equirectangular videos.
 
 ### Dataset
 
 New dataset with annotated objects in 360° equirectangular video has been created. You can see demo of this dataset [here](./code/annotation/dataset-demo/demo-annotation) or on [YouTube](https://www.youtube.com/watch?v=kgXd6uoXa8M). This dataset includes 21 video sequences with total 9909 annotated (groundtruth) frames. The bounding boxes could be overflowing the horizontal borders of equirectangular frames.
 
-You can download full dataset using script `bash ./code/script_dataset_download.sh` or you can download it manually as [zip](https://drive.google.com/file/d/1PWqpAb0DuXA58RZcEzfxqBP7C3yVH7uE/view?usp=sharing) or [folder](https://drive.google.com/drive/folders/13tkE4vY3FGGD42kDIjyS9K423vrvpKoU?usp=sharing).
+You can download full dataset using this [script](./code/script_dataset_download.sh) or you can download it manually as [zip](https://drive.google.com/file/d/1PWqpAb0DuXA58RZcEzfxqBP7C3yVH7uE/view?usp=sharing) or [folder](https://drive.google.com/drive/folders/13tkE4vY3FGGD42kDIjyS9K423vrvpKoU?usp=sharing).
 
-The videos used in this dataset has been taken from these resources (datasets 1 a 2 have been reannotated):
+The videos used in this dataset have been taken from these resources (datasets 1 a 2 have been reannotated):
 
 > 1. Keng-Chi Liu, Yi-Ting Shen, Liang-Gee Chen. "Simple online and realtime tracking with spherical panoramic camera" (ICCE 2018) **[[Paper]](https://ieeexplore.ieee.org/document/8326132)  [[Dataset]](https://github.com/KengChiLiu/MOT360)**
 >
@@ -54,7 +54,7 @@ The videos used in this dataset has been taken from these resources (datasets 1 
 
 ### Single object trackers
 
-The custom improvements of Single Object Tracking in equirectangular projection of 360° video has been evaluated for the following well-known and state-of-the-art trackers. The python implementations of the selected trackers have been made publicly available by their authors or have been added to OpenCV library.
+The custom improvements of Single Object Tracking in equirectangular projection of 360° video have been evaluated for the following well-known and state-of-the-art trackers. The python implementations of the selected trackers have been made publicly available by their authors or have been added to OpenCV extra modules.
 
 - #### MIL **[[Paper]](https://faculty.ucmerced.edu/mhyang/papers/cvpr09a.pdf)  [[OpenCV extra modules]](https://github.com/opencv/opencv_contrib)**
 
@@ -147,15 +147,28 @@ Run the installation script to install all the dependencies. These dependencies 
 bash install.sh
 ```
 
-**Note:** The install script has been tested on an Ubuntu 18.04.
+**Note:** The install script has been tested on an Ubuntu 18.04. You could probably use current releases of numpy, torch and matplotlib. The implementation has been tested also on Windows 10 platform.
 
 #### Let's test it!
 
 ```
-TODO
+cd code
+
+# try OpenCV implementation of tracker CSRT
+python run_opencv_tracking.py -t CSRT -v annotation/dataset-demo/demo-annotation/demo.mp4
+
+# try CSRT with BORDER improvement
+python run_opencv_tracking.py -t CSRT -v annotation/dataset-demo/demo-annotation/demo.mp4 -border
+
+# try CSRT with NFOV improvement
+python run_opencv_tracking.py -t CSRT -v annotation/dataset-demo/demo-annotation/demo.mp4 -nfov
 ```
 
+
+
 ## Advanced installation
+
+You could also try the official python implementations of selected trackers. 
 
 #### Clone the submodules
 
@@ -165,28 +178,37 @@ This command clones 3 repositories ([pytracking](https://github.com/visionml/pyt
 git submodule update --init  
 ```
 
-#### Install dependencies
+#### Follow the instructions
 
-TODO
+- To enable ECO, ATOM, DiMP and KYS trackers ([pytracking](https://github.com/visionml/pytracking))
 
-#### Copy improved modules and download pretrained models
+  -> Follow the instructions [here](./code/modified_pytracking/README.md) (see also modified [code](./code/modified_pytracking/))
 
-```
-cd code/
+- To enable DaSiamRPN tracker ([DaSiamRPN](https://github.com/foolwood/DaSiamRPN))
+  -> Follow the instructions [here](./code/modified_DaSiamRPN/README.md) (see also modified [code](./code/modified_DaSiamRPN/))
 
-# modified modules and pretrained models of ECO, ATOM, DiMP and KYS trackers 
-bash script_modify_pytracking.sh
+- To enable SiamDW and Ocean trackers ([TracKit](https://github.com/researchmm/TracKit))
+  -> Follow the instructions [here](./code/modified_TracKit/README.md) (see also modified [code](./code/modified_TracKit/))
 
-# modified modules and pretrained models of DaSiamRPN tracker 
-bash script_modify_DaSiamRPN.sh
+  
 
-# modified modules and pretrained models of SiamDW and Ocean trackers 
-bash script_modify_TracKit.sh
-```
-
-#### Let's test it!
+## Directory structure
 
 ```
-TODO
+$360Tracking
+|-- tech_report
+|-- code
+   |-- annotation
+      |-- dataset
+      |-- dateset-demo
+      |-- results
+   |-- opencv_tracking
+   |-- boundingbox
+   |-- nfov
+   |-- modified_DaSiamRPN
+   |-- modified_pytracking
+   |-- modified_TracKit
+   |-- DaSiamRPN
+   |-- pytracking
+   |-- TracKit
 ```
-

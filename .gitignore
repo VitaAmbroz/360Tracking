@@ -24,7 +24,6 @@
 /code/.fig/*.mp4
 /code/.fig/*.mov
 
-
 # ignore files with computed metrics
 *-iou.txt
 *-centererror.txt

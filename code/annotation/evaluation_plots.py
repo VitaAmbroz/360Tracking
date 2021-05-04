@@ -18,10 +18,9 @@
 import sys
 import glob
 import os
-import tikzplotlib
+# import tikzplotlib
 import matplotlib
 import matplotlib.pyplot as plt
-from matplotlib.ticker import MaxNLocator
 import numpy as np
 import torch
 
