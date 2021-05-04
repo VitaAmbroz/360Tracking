@@ -34,7 +34,7 @@ conda activate TracKit
 python setup.py develop
 ```
 
-**Note:** We have used only pytorch version, yould try TensorRT version as well ([TracKit](https://github.com/researchmm/TracKit/blob/master/lib/tutorial/Ocean/ocean.md)).
+**Note:** We have used only pytorch version, you could try TensorRT version as well ([TracKit](https://github.com/researchmm/TracKit/blob/master/lib/tutorial/Ocean/ocean.md)).
 
 
 

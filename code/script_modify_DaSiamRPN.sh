@@ -18,3 +18,6 @@ pip install gdown
 
 echo "******* Downloading model... *******"
 gdown https://drive.google.com/u/0/uc\?id\=1-vNVZxfbIplXHrqMHiJJYWXYWsOIvGsf -O DaSiamRPN/code/SiamRPNBIG.model
+
+echo "******* Downloading VOT model... *******"
+gdown https://drive.google.com/u/0/uc\?id\=1G9GtKpF36-AwjyRXVLH_gHvrfVSCZMa7 -O DaSiamRPN/code/SiamRPNVOT.model

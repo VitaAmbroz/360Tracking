@@ -18,11 +18,13 @@ cp modified_pytracking/run_video_360.py pytracking/pytracking/
 echo "******* Installing gdown... *******"
 pip install gdown
 
+mkdir pytracking/pytracking/networks
+
 echo "******* Downloading ATOM model... *******"
 gdown https://drive.google.com/u/0/uc\?id\=1VNyr-Ds0khjM0zaq6lU-xfY74-iWxBvU -O pytracking/pytracking/networks/atom_default.pth
 
 echo "******* Downloading DiMP50 model... *******"
-gdown https://drive.google.com/u/0/uc\?id\=1qgachgqks2UGjKx-GdO1qylBDdB1f9KN -O pytracking/networks/dimp50.pth
+gdown https://drive.google.com/u/0/uc\?id\=1qgachgqks2UGjKx-GdO1qylBDdB1f9KN -O pytracking/pytracking/networks/dimp50.pth
 
 echo "******* Downloading KYS model... *******"
 gdown https://drive.google.com/u/0/uc\?id\=1nJTBxpuBhN0WGSvG7Zm3yBc9JAC6LnEn -O pytracking/pytracking/networks/kys.pth

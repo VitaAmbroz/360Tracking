@@ -10,7 +10,7 @@ cp modified_TracKit/ocean_360_default.py TracKit/tracking/
 cp modified_TracKit/ocean_360_border.py TracKit/tracking/
 cp modified_TracKit/ocean_360_nfov.py TracKit/tracking/
 cp modified_TracKit/siamdw_360_default.py TracKit/tracking/
-cp modified_TracKit/siamdw_360_default.py TracKit/tracking/
+cp modified_TracKit/siamdw_360_border.py TracKit/tracking/
 cp modified_TracKit/siamdw_360_nfov.py TracKit/tracking/
 cp modified_TracKit/run_video_360.py TracKit/tracking/
 
