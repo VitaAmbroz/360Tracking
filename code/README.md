@@ -147,16 +147,13 @@ python run_evaluation.py -demo
 # run drawing for given video, groundtruth and result data
 python run_evaluation.py -v annotation/dataset/01/01.mp4 -gt annotation/dataset/01/groundtruth.txt -r annotation/results/CSRT/01/01-result-border.txt
 
-# run computing Intersection over Union metric (-iou flag)
-python run_evaluation.py -video annotation/dataset/01/01.mp4 -gt annotation/dataset/01/groundtruth.txt -result annotation/results/CSRT/01/01-result-border.txt -iou
+# run computing Intersection over Union metric (-iou flag) (if you have)
+python run_evaluation.py -v annotation/dataset/01/01.mp4 -gt annotation/dataset/01/groundtruth.txt -r annotation/results/CSRT/01/01-result-border.txt -iou
 
 # run computing Location/Center error metric (-centererror flag)
-python run_evaluation.py -v annotation/dataset/01/01.mp4 -gt annotation/dataset/01/groundtruth.txt -r annotation/results/CSRT/01/01-result-default.txt -centererror
+python run_evaluation.py -v annotation/dataset/01/01.mp4 -gt annotation/dataset/01/groundtruth.txt -r annotation/results/CSRT/01/01-result-border.txt -centererror
 
-# you can create plots for metrics that you have just computed
+# you can create plots for metrics (if you have computed IoU and CenterError for tracker CSRT and seq 01)
 python run_evaluation_plots.py -success -t CSRT -n 01
 python run_evaluation_plots.py -precision -t CSRT -n 01
 ```
-
-
-##### 
