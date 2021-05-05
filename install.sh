@@ -31,4 +31,10 @@ pip install "torch>=1.7.0"
 echo ""
 echo ""
 
+
+echo "************** Installing statsmodels *********************"
+pip install statsmodels
+echo ""
+echo ""
+
 echo "**************** Installation completed! ******************"
