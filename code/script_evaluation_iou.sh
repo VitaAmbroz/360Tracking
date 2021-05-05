@@ -1,7 +1,7 @@
 #!/bin/sh
 
 ##############################################################################################
-############################### Results KCF (OpenCV_contrib) ################################
+############################### Results CSRT (OpenCV_contrib) ################################
 ##############################################################################################
 python run_evaluation.py -v annotation/dataset/01/01.mp4 -gt annotation/dataset/01/groundtruth.txt -r annotation/results/CSRT/01/01-result-default.txt -iou
 python run_evaluation.py -v annotation/dataset/02/02.mp4 -gt annotation/dataset/02/groundtruth.txt -r annotation/results/CSRT/02/02-result-default.txt -iou

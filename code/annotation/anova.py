@@ -28,6 +28,10 @@ class Anova:
         # constant of whole dataset with total 21 sequences
         self.DATASET = ["01","02","03","04","05","06","07","08","09","10","11","12","13","14","15","16","17","18","19","20","21"]
 
+        # constant of whole dataset with total 13 sequences where object crosses equirectangular border
+        self.DATASET_CROSSING_BORDER = ["01","02","03","04","08","11","12","13","14","15","16","18","21"]
+        # constant of whole dataset with total 8 sequences where object does not crosses equirectangular border
+        self.DATASET_NOT_CROSSING_BORDER = ["05","06","07","09","10","17","19","20"]
     
     def _parseGivenDataFile(self, path):
         """Method for parsing float numbers from given file"""
@@ -104,6 +108,7 @@ class Anova:
 
         # Type 2 ANOVA DataFrame - https://www.statsmodels.org/dev/anova.html#module-statsmodels.stats.anova
         df_lm = ols('auc ~ C(improvement, Sum) + C(tracker, Sum)', data=df).fit()
+        # df_lm = ols('auc ~ C(improvement) + C(tracker)', data=df).fit()
         # df_lm = ols('auc ~ C(improvement, Sum) : C(tracker, Sum)', data=df).fit()
         # df_lm = ols('auc ~ C(improvement, Sum) * C(tracker, Sum)', data=df).fit()
         table = sm.stats.anova_lm(df_lm, typ=2) 
@@ -168,10 +173,10 @@ class Anova:
         g1 = []
         g2 = []
         g3 = []
-        for i in range(len(self.DATASET)):
+        for i in range(len(self.DATASET_NOT_CROSSING_BORDER)):
             for j in range(len(self.IMPROVEMENTS)):
                 for k in range(len(self.TRACKERS)):
-                    g1.append(self.DATASET[i])
+                    g1.append("X" + self.DATASET_NOT_CROSSING_BORDER[i])
                     g2.append(self.IMPROVEMENTS[j])
                     g3.append(self.TRACKERS[k])
         # print(g1)
@@ -179,14 +184,14 @@ class Anova:
         # print(g3)
 
         auc = []
-        for i in range(len(self.DATASET)):
-            default_auc_i = self._getAUCAllTrackersSequence(seq_number=self.DATASET[i], default=True).tolist()
-            border_auc_i = self._getAUCAllTrackersSequence(seq_number=self.DATASET[i], border=True).tolist()
-            nfov_auc_i = self._getAUCAllTrackersSequence(seq_number=self.DATASET[i], nfov=True).tolist()
+        for i in range(len(self.DATASET_NOT_CROSSING_BORDER)):
+            default_auc_i = self._getAUCAllTrackersSequence(seq_number=self.DATASET_NOT_CROSSING_BORDER[i], default=True).tolist()
+            border_auc_i = self._getAUCAllTrackersSequence(seq_number=self.DATASET_NOT_CROSSING_BORDER[i], border=True).tolist()
+            nfov_auc_i = self._getAUCAllTrackersSequence(seq_number=self.DATASET_NOT_CROSSING_BORDER[i], nfov=True).tolist()
             # concat
             auc = auc + default_auc_i + border_auc_i + nfov_auc_i
         
-        auc_rounded = [round(num, 3) for num in auc]
+        auc_rounded = [round(num / 100, 3) for num in auc]
         # print(auc_rounded)
 
         df = pd.DataFrame(list(zip(auc_rounded, g1, g2, g3)), columns=['auc', 'sequence', 'improvement', 'tracker'], dtype=np.float64)
@@ -194,6 +199,7 @@ class Anova:
         
         # 3Way anova - https://www.pythonfordatascience.org/factorial-anova-python/
         model = ols("auc ~ C(sequence, Sum) + C(improvement, Sum) + C(tracker, Sum) + C(sequence, Sum):C(improvement, Sum) + C(sequence, Sum):C(tracker, Sum) + C(improvement, Sum):C(tracker, Sum)", data=df).fit()
+        # model = ols("auc ~ C(sequence) + C(improvement) + C(tracker) + C(sequence):C(improvement) + C(sequence):C(tracker) + C(improvement):C(tracker)", data=df).fit()
         aov_table = sm.stats.anova_lm(model, typ=3)
         print(aov_table)
 
@@ -262,6 +268,7 @@ class Anova:
 
         # Type 2 ANOVA DataFrame - https://www.statsmodels.org/dev/anova.html#module-statsmodels.stats.anova
         df_lm = ols('cerror ~ C(improvement, Sum) + C(tracker, Sum)', data=df).fit()
+        # df_lm = ols('cerror ~ C(improvement) + C(tracker)', data=df).fit()
         # df_lm = ols('cerror ~ C(improvement, Sum) : C(tracker, Sum)', data=df).fit()
         # df_lm = ols('cerror ~ C(improvement, Sum) * C(tracker, Sum)', data=df).fit()
         table = sm.stats.anova_lm(df_lm, typ=2) 
@@ -333,5 +340,6 @@ class Anova:
         
         # 3Way anova - https://www.pythonfordatascience.org/factorial-anova-python/
         model = ols("cerror ~ C(sequence, Sum) + C(improvement, Sum) + C(tracker, Sum) + C(sequence, Sum):C(improvement, Sum) + C(sequence, Sum):C(tracker, Sum) + C(improvement, Sum):C(tracker, Sum)", data=df).fit()
+        # model = ols("cerror ~ C(sequence) + C(improvement) + C(tracker) + C(sequence):C(improvement) + C(sequence):C(tracker) + C(improvement):C(tracker)", data=df).fit()
         aov_table = sm.stats.anova_lm(model, typ=3)
         print(aov_table)
