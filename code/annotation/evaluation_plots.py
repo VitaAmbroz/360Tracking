@@ -500,7 +500,7 @@ class EvaluationPlots:
             ax.plot(threshold_set_overlap.tolist(), min_curve[id_sort, :].tolist(), linewidth=1, color=plot_draw_styles[id_sort.item()]['color'], linestyle='--')
 
             # show light background as variance
-            ax.fill_between(threshold_set_overlap.tolist(), min_curve[id_sort, :].tolist(), max_curve[id_sort, :].tolist(), color=plot_draw_styles[id_sort.item()]['color'], alpha=0.15)
+            ax.fill_between(threshold_set_overlap.tolist(), min_curve[id_sort, :].tolist(), max_curve[id_sort, :].tolist(), color=plot_draw_styles[id_sort.item()]['color'], alpha=0.08)
 
 
         ax.legend(plotted_lines[::-1], legend_text[::-1], loc=legend_loc, bbox_to_anchor=bbox_to_anchor, fancybox=False, edgecolor='black', fontsize=font_size_legend, framealpha=1.0)
@@ -831,7 +831,7 @@ class EvaluationPlots:
             ax.plot(threshold_set_center.tolist(), min_curve[id_sort, :].tolist(), linewidth=1, color=plot_draw_styles[id_sort.item()]['color'], linestyle='--')
 
             # show light background as variance
-            ax.fill_between(threshold_set_center.tolist(), min_curve[id_sort, :].tolist(), max_curve[id_sort, :].tolist(), color=plot_draw_styles[id_sort.item()]['color'], alpha=0.15)
+            ax.fill_between(threshold_set_center.tolist(), min_curve[id_sort, :].tolist(), max_curve[id_sort, :].tolist(), color=plot_draw_styles[id_sort.item()]['color'], alpha=0.08)
 
 
         ax.legend(plotted_lines[::-1], legend_text[::-1], loc=legend_loc, bbox_to_anchor=bbox_to_anchor, fancybox=False, edgecolor='black', fontsize=font_size_legend, framealpha=1.0)
