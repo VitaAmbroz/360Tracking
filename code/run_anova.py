@@ -11,7 +11,7 @@ from code.annotation import Anova
 
 if __name__ == '__main__':
     anova = Anova()
+    anova.run3WayAnovaAUC()
+    # anova.run3WayAnovaCenterError()
     # anova.run2WayAnovaAUC()
-    # anova.run3WayAnovaAUC()
     # anova.run2WayAnovaCenterError()
-    anova.run3WayAnovaCenterError()

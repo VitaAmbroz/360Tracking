@@ -6,6 +6,8 @@
 # pip install "matplotlib>=3.3.4"
 # pip install "numpy>=1.20.1"
 # pip install "torch>=1.8.1"
+# pip install statsmodels
+# pip install seaborn
 
 
 # Tested on Ubuntu 18.04 with python 3.8.3 and following package versions
@@ -34,6 +36,11 @@ echo ""
 
 echo "************** Installing statsmodels *********************"
 pip install statsmodels
+echo ""
+echo ""
+
+echo "****************** Installing seaborn *********************"
+pip install seaborn
 echo ""
 echo ""
 
