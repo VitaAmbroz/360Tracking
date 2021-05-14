@@ -1,7 +1,15 @@
 
-import sys
-import glob
-import os
+#################################################################################################
+# Visual object tracking in panoramic video
+# Master thesis at Brno University of Technology - Faculty of Information Technology
+# Author:       Vít Ambrož (xambro15@stud.fit.vutbr.cz)
+# Supervisor:   Doc. Ing. Martin Čadík, Ph.D.
+# Module:       anova.py
+# Description:  Experiments with results and 3-WAY and 2-WAY ANOVA (Analysis of Variance)
+# Sources:      - https://www.pythonfordatascience.org/factorial-anova-python/
+#               - https://www.statsmodels.org/dev/anova.html#module-statsmodels.stats.anova
+#################################################################################################
+
 import numpy as np
 import torch
 
@@ -15,6 +23,7 @@ import seaborn as sns
 
 
 class Anova:
+    """Computing 3-way and 2-way ANOVA for AUC and Precision metrics"""
     def __init__(self):
         # paths for IoU files
         self.PATH_IOU_DEFAULT = "annotation/results/<TRACKER>/<NUMBER>/<NUMBER>-result-default-iou.txt"
@@ -38,6 +47,7 @@ class Anova:
         # constant of whole dataset with total 8 sequences where object does not crosses equirectangular border
         self.DATASET_NOT_CROSSING_BORDER = ["05","06","07","09","10","17","19","20"]
     
+
     def _parseGivenDataFile(self, path):
         """Method for parsing float numbers from given file"""
         dataFile = open(path, 'r')
@@ -58,6 +68,7 @@ class Anova:
     ##################################### 3-Way ANOVA for AUC metric #################################
     ##################################################################################################
     def _getAUCAllTrackersSequence(self, seq_number: str, default=False, border=False, nfov=False):
+        """Returns AUC values of all trackers for given sequence as tensor"""
         plot_bin_gap = 0.05
         threshold_set_overlap = torch.arange(0.0, 1.0 + plot_bin_gap, plot_bin_gap, dtype=torch.float64)
         ave_success_rate_plot_overlap = torch.zeros((len(self.TRACKERS), threshold_set_overlap.numel()), dtype=torch.float32)
@@ -97,6 +108,7 @@ class Anova:
 
 
     def run3WayAnovaAUC(self):
+        """Computes 3-way ANOVA for AUC and factors - sequence, improvement, tracker"""
         g1 = []
         g2 = []
         g3 = []
@@ -108,9 +120,6 @@ class Anova:
                     g1.append(self.DATASET_NOT_CROSSING_BORDER[i])
                     g2.append(self.IMPROVEMENTS[j])
                     g3.append(TRACKERS_SHORTCUTS[k])
-        # print(g1)
-        # print(g2)
-        # print(g3)
 
         auc = []
         for i in range(len(self.DATASET_NOT_CROSSING_BORDER)):
@@ -133,6 +142,7 @@ class Anova:
         print(aov_table)
     
 
+        # generating boxplot
         matplotlib.rcParams.update({'font.size': 18})
         matplotlib.rcParams.update({'axes.labelsize': 18})
         
@@ -151,6 +161,7 @@ class Anova:
     ############################### 3-Way ANOVA for Distance Error metric ############################
     ##################################################################################################
     def _getCerrorAllTrackersSequence(self, seq_number: str, default=False, border=False, nfov=False):
+        """Returns Precision values of all trackers for given sequence as tensor"""
         threshold_set_center = torch.arange(0, 51, dtype=torch.float64)
         ave_success_rate_plot_center = torch.zeros((len(self.TRACKERS), threshold_set_center.numel()), dtype=torch.float32)
 
@@ -182,6 +193,7 @@ class Anova:
 
 
     def run3WayAnovaCenterError(self):
+        """Computes 3-way ANOVA for Precision and factors - sequence, improvement, tracker"""
         g1 = []
         g2 = []
         g3 = []
@@ -193,9 +205,6 @@ class Anova:
                     g1.append(self.DATASET[i])
                     g2.append(self.IMPROVEMENTS[j])
                     g3.append(TRACKERS_SHORTCUTS[k])
-        # print(g1)
-        # print(g2)
-        # print(g3)
 
         cerror = []
         for i in range(len(self.DATASET)):
@@ -236,6 +245,7 @@ class Anova:
     ##################################### 2-Way ANOVA for AUC metric #################################
     ##################################################################################################
     def _getAUCAllTrackers(self, default=False, border=False, nfov=False):
+        """Returns AUC values of all trackers for all sequences as tensor"""
         dataset = self.DATASET
 
         plot_bin_gap = 0.05
@@ -269,6 +279,7 @@ class Anova:
 
 
     def run2WayAnovaAUC(self):
+        """Computes 2-way ANOVA for AUC and factors - improvement, tracker"""
         g1 = []
         g2 = []
         for i in range(len(self.IMPROVEMENTS)):
@@ -282,10 +293,6 @@ class Anova:
         # concat
         auc = default_auc + border_auc + nfov_auc
         auc_rounded = [round(num / 100, 3) for num in auc]
-        
-        # print(auc_rounded)
-        # print(g1)
-        # print(g2)
 
         df = pd.DataFrame(list(zip(auc_rounded, g1, g2)), columns=['auc', 'improvement', 'tracker'], dtype=np.float64)
         print(df)
@@ -293,8 +300,6 @@ class Anova:
         # Type 2 ANOVA DataFrame - https://www.statsmodels.org/dev/anova.html#module-statsmodels.stats.anova
         df_lm = ols('auc ~ C(improvement, Sum) + C(tracker, Sum)', data=df).fit()
         # df_lm = ols('auc ~ C(improvement) + C(tracker)', data=df).fit()
-        # df_lm = ols('auc ~ C(improvement, Sum) : C(tracker, Sum)', data=df).fit()
-        # df_lm = ols('auc ~ C(improvement, Sum) * C(tracker, Sum)', data=df).fit()
         table = sm.stats.anova_lm(df_lm, typ=2) 
         print(table)
     
@@ -303,7 +308,7 @@ class Anova:
     ############################### 2-Way ANOVA for Distance Error metric ############################
     ##################################################################################################
     def _getCerrorAllTrackers(self, default=False, border=False, nfov=False):
-        """Draws and saves precision plot for all trackers (default/border/nfov) and all 01-21 video sequences in dataset"""
+        """Returns Precision values of all trackers for all sequences as tensor"""
         dataset = self.DATASET
         
         threshold_set_center = torch.arange(0, 51, dtype=torch.float64)
@@ -338,6 +343,7 @@ class Anova:
 
 
     def run2WayAnovaCenterError(self):
+        """Computes 2-way ANOVA for Precision and factors - improvement, tracker"""
         g1 = []
         g2 = []
         for i in range(len(self.IMPROVEMENTS)):
@@ -351,10 +357,6 @@ class Anova:
         # concat
         cerror = default_cerror + border_cerror + nfov_cerror
         cerror_rounded = [round(num / 100, 3) for num in cerror]
-        
-        # print(cerror_rounded)
-        # print(g1)
-        # print(g2)
 
         df = pd.DataFrame(list(zip(cerror_rounded, g1, g2)), columns=['cerror', 'improvement', 'tracker'], dtype=np.float64)
         print(df)
@@ -362,8 +364,6 @@ class Anova:
         # Type 2 ANOVA DataFrame - https://www.statsmodels.org/dev/anova.html#module-statsmodels.stats.anova
         df_lm = ols('cerror ~ C(improvement, Sum) + C(tracker, Sum)', data=df).fit()
         # df_lm = ols('cerror ~ C(improvement) + C(tracker)', data=df).fit()
-        # df_lm = ols('cerror ~ C(improvement, Sum) : C(tracker, Sum)', data=df).fit()
-        # df_lm = ols('cerror ~ C(improvement, Sum) * C(tracker, Sum)', data=df).fit()
         table = sm.stats.anova_lm(df_lm, typ=2) 
         print(table)
 

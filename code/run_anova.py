@@ -1,5 +1,12 @@
+#################################################################################################
+# Visual object tracking in panoramic video
+# Master thesis at Brno University of Technology - Faculty of Information Technology
+# Author:       Vít Ambrož (xambro15@stud.fit.vutbr.cz)
+# Supervisor:   Doc. Ing. Martin Čadík, Ph.D.
+# Module:       run_anova.py
+# Description:  Top level for experiments with ANOVA (Analysis of Variance)
+#################################################################################################
 
-import argparse
 import os
 import sys
 

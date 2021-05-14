@@ -29,7 +29,7 @@ import numpy as np
 
 class NFOV():
     def __init__(self, height=400, width=800):
-        # default FOV 90°
+        # default FOV [90°,45°]
         self.FOV = [0.5, 0.5]
         self.PI = pi
         self.PI_2 = pi * 0.5
