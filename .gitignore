@@ -20,9 +20,9 @@
 /code/script_evaluation_plots.bat
 
 # tmp generated videos
-/code/.fig/*.avi
-/code/.fig/*.mp4
-/code/.fig/*.mov
+/code/fig/*.avi
+/code/fig/*.mp4
+/code/fig/*.mov
 
 # ignore files with computed metrics
 *-iou.txt

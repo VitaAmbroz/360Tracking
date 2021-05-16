@@ -95,7 +95,7 @@ python TracKit/tracking/run_video_360.py --arch SiamDW --resume TracKit/snapshot
 You could a simple annotation tool that enables annotation on the borders of equirectangular frames as you can see below. The annotation tool uses OpenCV mouse and keyboard events. It has been used to create the new [dataset](https://drive.google.com/drive/folders/13tkE4vY3FGGD42kDIjyS9K423vrvpKoU?usp=sharing).
 
 <p align="center">
-    <img src="./.fig/annotation_tool.jpg" alt="annotation_tool_screesnhot"/>
+    <img src="./fig/annotation_tool.jpg" alt="annotation_tool_screesnhot"/>
 </p>
 
 ```

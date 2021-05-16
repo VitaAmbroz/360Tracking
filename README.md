@@ -4,28 +4,27 @@ This repository 360Tracking has been created as the part of master thesis at  [B
 
 ## Improvements of Single Object Tracking (SOT) in 360° video
 
-Ordinary trackers can fail or produce false positive results when tracking in equirectangular projection of 360° videos. The reasons of failures could be similar as in ordinary videos with limited field of view (e.g. occlusion). Although there might be other problems caused by equirectangular distortion. Moreover in equirectangular panorama the tracked object can cross horizontal borders of equirectangular frame. You could see how the state-of-the-art tracker [KYS](https://github.com/visionml/pytracking) generates false positive results and fails below.
+Single object trackers can fail or produce false positive results when tracking in equirectangular projection of 360° videos. The reasons of failures could be similar as in ordinary videos with limited field of view (e.g. occlusion). Although there might be other problems caused by equirectangular distortion. The tracked object can also cross horizontal borders of equirectangular frame. You could see how the state-of-the-art tracker [KYS](https://github.com/visionml/pytracking) generates false positive results and fails below.
 
 <p align="center">
-    <img src="./code/.fig/kys_default.gif" alt="kys_default"  />
+    <img src="./code/fig/kys_default.gif" alt="kys_default"  />
 </p>
+### Equirectangular rotation approach
 
-### Frame shift approach
-
-This approach may be the right solution for border crossing problem of single object tracking in equirectangular panorama. We have provided the solution where we simply simulate spherical rotation in Z axis (Yaw angle). The tracker predicts results in shifted/rotated frame and predicted bounding box is transformed backward to original frame.
+This approach may be the right solution for border crossing problem of single object tracking in equirectangular panorama. We have provided the solution where we simply simulate the spherical rotation about z-axis (Yaw). The tracker predicts results in shifted/rotated frame and predicted bounding box is transformed backward to original frame.
 
 <p align="center">
-    <img src="./code/.fig/kys_border.gif" alt="kys_border"  />
+    <img src="./code/fig/kys_border.gif" alt="kys_border"  />
 </p>
 
 
 
 ### Normal field of view (rectilinear) approach 
 
-The second approach could improve tracking process in very distorted areas in equirectangular projection and solves border crossing problem as well. This solution simulates normal camera system that tries to keep the tracked object in the center area of rectilinear projection. The tracker predicts results in rectilinear/perspective projection (adaptive field of view from 90° to 144°) and these results are converted to equirectangular (360°) coordinates.
+The second approach could improve tracking process in very distorted areas in equirectangular projection and solves border crossing problem as well. This solution simulates virtual camera system that tries to keep the tracked object in the center area of rectilinear projection. The tracker predicts results in rectilinear/perspective projection (adaptive field of view from 90° to 144°) and these results are converted backward to equirectangular (360°) coordinates.
 
 <p align="center">
-    <img src="./code/.fig/kys_nfov.gif" alt="kys_nfov"  />
+    <img src="./code/fig/kys_nfov.gif" alt="kys_nfov"  />
 </p>
 
 
@@ -123,11 +122,11 @@ The custom improvements of Single Object Tracking in equirectangular projection 
 
 ### Results
 
-These 12 trackers have been evaluated for the custom dataset mentioned above. You may notice the success plots based on Intersection over Union (IoU) metric with AUC values in legend and precision plots based on center error distance. DEFAULT plots display tracker results without any improvement, BORDER plots display "frame shift approach" results and finally NFOV plots display trackers results from normal field of view (rectilinear) approach.
+These 12 trackers have been evaluated for the custom dataset mentioned above. You may notice the success plots based on Intersection over Union (IoU) metric with AUC values in legend and precision plots based on center error distance. DEFAULT plots display tracker results without any improvement, BORDER plots display "equirectangular rotation approach" results and finally NFOV plots display trackers results from normal field of view (rectilinear) approach.
 
-<img src="./code/.fig/success_plots.png" alt="success_plots"  />
+<img src="./code/fig/success_plots.png" alt="success_plots"  />
 
-<img src="./code/.fig/precision_plots.png" alt="success_plots"  />
+<img src="./code/fig/precision_plots.png" alt="success_plots"  />
 
 
 
