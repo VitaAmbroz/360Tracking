@@ -1,5 +1,88 @@
 #!/bin/sh
 
+echo "Uncomment to create plots..."
+
+# ###########################################
+# ############ Success Total ################
+# ###########################################
+# python run_evaluation_plots.py -success -t CSRT --allsequences
+# python run_evaluation_plots.py -success -t MEDIANFLOW --allsequences
+# python run_evaluation_plots.py -success -t KCF --allsequences
+# python run_evaluation_plots.py -success -t MIL --allsequences
+# python run_evaluation_plots.py -success -t TLD --allsequences
+# python run_evaluation_plots.py -success -t ECO --allsequences
+# python run_evaluation_plots.py -success -t ATOM --allsequences
+# python run_evaluation_plots.py -success -t DiMP --allsequences
+# python run_evaluation_plots.py -success -t KYS --allsequences
+# python run_evaluation_plots.py -success -t DaSiamRPN --allsequences
+# python run_evaluation_plots.py -success -t Ocean --allsequences
+# python run_evaluation_plots.py -success -t SiamDW --allsequences
+
+# python run_evaluation_plots.py -success -alltrackers
+
+# python run_evaluation_plots.py -success -alltrackers -n 01
+# python run_evaluation_plots.py -success -alltrackers -n 02
+# python run_evaluation_plots.py -success -alltrackers -n 03
+# python run_evaluation_plots.py -success -alltrackers -n 04
+# python run_evaluation_plots.py -success -alltrackers -n 05
+# python run_evaluation_plots.py -success -alltrackers -n 06
+# python run_evaluation_plots.py -success -alltrackers -n 07
+# python run_evaluation_plots.py -success -alltrackers -n 08
+# python run_evaluation_plots.py -success -alltrackers -n 09
+# python run_evaluation_plots.py -success -alltrackers -n 10
+# python run_evaluation_plots.py -success -alltrackers -n 11
+# python run_evaluation_plots.py -success -alltrackers -n 12
+# python run_evaluation_plots.py -success -alltrackers -n 13
+# python run_evaluation_plots.py -success -alltrackers -n 14
+# python run_evaluation_plots.py -success -alltrackers -n 15
+# python run_evaluation_plots.py -success -alltrackers -n 16
+# python run_evaluation_plots.py -success -alltrackers -n 17
+# python run_evaluation_plots.py -success -alltrackers -n 18
+# python run_evaluation_plots.py -success -alltrackers -n 19
+# python run_evaluation_plots.py -success -alltrackers -n 20
+# python run_evaluation_plots.py -success -alltrackers -n 21
+
+
+###########################################
+########### Precision Total ###############
+###########################################
+# python run_evaluation_plots.py -precision -t CSRT --allsequences
+# python run_evaluation_plots.py -precision -t MEDIANFLOW --allsequences
+# python run_evaluation_plots.py -precision -t KCF --allsequences
+# python run_evaluation_plots.py -precision -t MIL --allsequences
+# python run_evaluation_plots.py -precision -t TLD --allsequences
+# python run_evaluation_plots.py -precision -t ECO --allsequences
+# python run_evaluation_plots.py -precision -t ATOM --allsequences
+# python run_evaluation_plots.py -precision -t DiMP --allsequences
+# python run_evaluation_plots.py -precision -t KYS --allsequences
+# python run_evaluation_plots.py -precision -t DaSiamRPN --allsequences
+# python run_evaluation_plots.py -precision -t Ocean --allsequences
+# python run_evaluation_plots.py -precision -t SiamDW --allsequences
+
+# python run_evaluation_plots.py -precision -alltrackers
+
+# python run_evaluation_plots.py -precision -alltrackers -n 01
+# python run_evaluation_plots.py -precision -alltrackers -n 02
+# python run_evaluation_plots.py -precision -alltrackers -n 03
+# python run_evaluation_plots.py -precision -alltrackers -n 04
+# python run_evaluation_plots.py -precision -alltrackers -n 05
+# python run_evaluation_plots.py -precision -alltrackers -n 06
+# python run_evaluation_plots.py -precision -alltrackers -n 07
+# python run_evaluation_plots.py -precision -alltrackers -n 08
+# python run_evaluation_plots.py -precision -alltrackers -n 09
+# python run_evaluation_plots.py -precision -alltrackers -n 10
+# python run_evaluation_plots.py -precision -alltrackers -n 11
+# python run_evaluation_plots.py -precision -alltrackers -n 12
+# python run_evaluation_plots.py -precision -alltrackers -n 13
+# python run_evaluation_plots.py -precision -alltrackers -n 14
+# python run_evaluation_plots.py -precision -alltrackers -n 15
+# python run_evaluation_plots.py -precision -alltrackers -n 16
+# python run_evaluation_plots.py -precision -alltrackers -n 17
+# python run_evaluation_plots.py -precision -alltrackers -n 18
+# python run_evaluation_plots.py -precision -alltrackers -n 19
+# python run_evaluation_plots.py -precision -alltrackers -n 20
+# python run_evaluation_plots.py -precision -alltrackers -n 21
+
 # ###########################################
 # #### Results CSRT (OpenCV_contrib) ########
 # ###########################################
@@ -573,85 +656,3 @@
 # python run_evaluation_plots.py -precision -t SiamDW -n 19
 # python run_evaluation_plots.py -precision -t SiamDW -n 20
 # python run_evaluation_plots.py -precision -t SiamDW -n 21
-
-
-# ###########################################
-# ############ Success Total ################
-# ###########################################
-# python run_evaluation_plots.py -success -t CSRT --allsequences
-# python run_evaluation_plots.py -success -t MEDIANFLOW --allsequences
-# python run_evaluation_plots.py -success -t KCF --allsequences
-# python run_evaluation_plots.py -success -t MIL --allsequences
-# python run_evaluation_plots.py -success -t TLD --allsequences
-# python run_evaluation_plots.py -success -t ECO --allsequences
-# python run_evaluation_plots.py -success -t ATOM --allsequences
-# python run_evaluation_plots.py -success -t DiMP --allsequences
-# python run_evaluation_plots.py -success -t KYS --allsequences
-# python run_evaluation_plots.py -success -t DaSiamRPN --allsequences
-# python run_evaluation_plots.py -success -t Ocean --allsequences
-# python run_evaluation_plots.py -success -t SiamDW --allsequences
-
-# python run_evaluation_plots.py -success -alltrackers
-
-# python run_evaluation_plots.py -success -alltrackers -n 01
-# python run_evaluation_plots.py -success -alltrackers -n 02
-# python run_evaluation_plots.py -success -alltrackers -n 03
-# python run_evaluation_plots.py -success -alltrackers -n 04
-# python run_evaluation_plots.py -success -alltrackers -n 05
-# python run_evaluation_plots.py -success -alltrackers -n 06
-# python run_evaluation_plots.py -success -alltrackers -n 07
-# python run_evaluation_plots.py -success -alltrackers -n 08
-# python run_evaluation_plots.py -success -alltrackers -n 09
-# python run_evaluation_plots.py -success -alltrackers -n 10
-# python run_evaluation_plots.py -success -alltrackers -n 11
-# python run_evaluation_plots.py -success -alltrackers -n 12
-# python run_evaluation_plots.py -success -alltrackers -n 13
-# python run_evaluation_plots.py -success -alltrackers -n 14
-# python run_evaluation_plots.py -success -alltrackers -n 15
-# python run_evaluation_plots.py -success -alltrackers -n 16
-# python run_evaluation_plots.py -success -alltrackers -n 17
-# python run_evaluation_plots.py -success -alltrackers -n 18
-# python run_evaluation_plots.py -success -alltrackers -n 19
-# python run_evaluation_plots.py -success -alltrackers -n 20
-# python run_evaluation_plots.py -success -alltrackers -n 21
-
-
-###########################################
-########### Precision Total ###############
-###########################################
-python run_evaluation_plots.py -precision -t CSRT --allsequences
-python run_evaluation_plots.py -precision -t MEDIANFLOW --allsequences
-python run_evaluation_plots.py -precision -t KCF --allsequences
-python run_evaluation_plots.py -precision -t MIL --allsequences
-python run_evaluation_plots.py -precision -t TLD --allsequences
-python run_evaluation_plots.py -precision -t ECO --allsequences
-python run_evaluation_plots.py -precision -t ATOM --allsequences
-python run_evaluation_plots.py -precision -t DiMP --allsequences
-python run_evaluation_plots.py -precision -t KYS --allsequences
-python run_evaluation_plots.py -precision -t DaSiamRPN --allsequences
-python run_evaluation_plots.py -precision -t Ocean --allsequences
-python run_evaluation_plots.py -precision -t SiamDW --allsequences
-
-python run_evaluation_plots.py -precision -alltrackers
-
-python run_evaluation_plots.py -precision -alltrackers -n 01
-python run_evaluation_plots.py -precision -alltrackers -n 02
-python run_evaluation_plots.py -precision -alltrackers -n 03
-python run_evaluation_plots.py -precision -alltrackers -n 04
-python run_evaluation_plots.py -precision -alltrackers -n 05
-python run_evaluation_plots.py -precision -alltrackers -n 06
-python run_evaluation_plots.py -precision -alltrackers -n 07
-python run_evaluation_plots.py -precision -alltrackers -n 08
-python run_evaluation_plots.py -precision -alltrackers -n 09
-python run_evaluation_plots.py -precision -alltrackers -n 10
-python run_evaluation_plots.py -precision -alltrackers -n 11
-python run_evaluation_plots.py -precision -alltrackers -n 12
-python run_evaluation_plots.py -precision -alltrackers -n 13
-python run_evaluation_plots.py -precision -alltrackers -n 14
-python run_evaluation_plots.py -precision -alltrackers -n 15
-python run_evaluation_plots.py -precision -alltrackers -n 16
-python run_evaluation_plots.py -precision -alltrackers -n 17
-python run_evaluation_plots.py -precision -alltrackers -n 18
-python run_evaluation_plots.py -precision -alltrackers -n 19
-python run_evaluation_plots.py -precision -alltrackers -n 20
-python run_evaluation_plots.py -precision -alltrackers -n 21

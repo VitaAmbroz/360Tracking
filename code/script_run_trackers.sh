@@ -1,9 +1,11 @@
 #!/bin/sh
 
+echo "Uncomment to run selected trackers..."
+
 ##############################################################################################
 ############################### Tracker CSRT (OpenCV_contrib) ################################
 ##############################################################################################
-# python run_opencv_tracking.py -t CSRT -v annotation/dataset/01/01.mp4 -gt annotation/dataset/01/groundtruth.txt -r annotation/results/CSRT/01/01-result-default.txt
+python run_opencv_tracking.py -t CSRT -v annotation/dataset/01/01.mp4 -gt annotation/dataset/01/groundtruth.txt -r annotation/results/CSRT/01/01-result-default.txt
 # python run_opencv_tracking.py -t CSRT -v annotation/dataset/02/02.mp4 -gt annotation/dataset/02/groundtruth.txt -r annotation/results/CSRT/02/02-result-default.txt
 # python run_opencv_tracking.py -t CSRT -v annotation/dataset/03/03.mp4 -gt annotation/dataset/03/groundtruth.txt -r annotation/results/CSRT/03/03-result-default.txt
 # python run_opencv_tracking.py -t CSRT -v annotation/dataset/04/04.mp4 -gt annotation/dataset/04/groundtruth.txt -r annotation/results/CSRT/04/04-result-default.txt
