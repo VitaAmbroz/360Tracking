@@ -9,6 +9,7 @@ Single object trackers can fail or produce false positive results when tracking 
 <p align="center">
     <img src="./code/fig/kys_default.gif" alt="kys_default"  />
 </p>
+
 ### Equirectangular rotation approach
 
 This approach may be the right solution for border crossing problem of single object tracking in equirectangular panorama. We have provided the solution where we simply simulate the spherical rotation about z-axis (Yaw). The tracker predicts results in shifted/rotated frame and predicted bounding box is transformed backward to original frame.

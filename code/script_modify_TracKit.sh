@@ -23,3 +23,6 @@ gdown https://drive.google.com/u/0/uc\?id\=1SzIql02jJ6Id1k0M6f-zjUA3RgAm6E5U -O 
 
 echo "******* Downloading Ocean VOT19 online model... *******"
 gdown https://drive.google.com/u/0/uc\?id\=1JAg22EYUpH_ODns-w-EN1hRhqk4d78Oz -O TracKit/snapshot/OceanV19on.pth
+
+
+echo "******* If models have not been downloaded, you need get access - see https://github.com/researchmm/TracKit ... *******"
