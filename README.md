@@ -149,6 +149,8 @@ bash install.sh
 
 **Note:** The install script has been tested on an Ubuntu 18.04. You could probably use current releases of numpy, torch and matplotlib. The implementation has been tested also on Windows 10 platform.
 
+**Note 2:** Make sure you have only "opencv-contrib-python" installed on your platform. There could be errors when both "opencv-contrib-python" and "opencv-python" are installed. The release [opencv-contrib-python 4.5.1.48](https://pypi.org/project/opencv-contrib-python/4.5.1.48/) is recommended, because some OpenCV trackers might not work in the newest release.
+
 #### Let's test it!
 
 ```
